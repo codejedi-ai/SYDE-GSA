@@ -1,8 +1,17 @@
 import type { Config } from "tailwindcss"
 
 const config: Config = {
-  content: ["./pages/**/*.{js,ts,jsx,tsx,mdx}", "./components/**/*.{js,ts,jsx,tsx,mdx}", "./app/**/*.{js,ts,jsx,tsx,mdx}", "*.{js,ts,jsx,tsx,mdx}"],
+  darkMode: ["class"],
+  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}", "*.{js,ts,jsx,tsx,mdx}"],
+  prefix: "",
   theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
       colors: {
         border: "hsl(var(--border))",
@@ -39,65 +48,62 @@ const config: Config = {
           foreground: "hsl(var(--card-foreground))",
         },
         // Cyberpunk colors
-        'cyber-dark': '#050714',
         'cyber-blue': '#00ffff',
-        'cyber-light': '#66ffff',
         'cyber-pink': '#ff0080',
-        'cyber-purple': '#8b59fb',
+        'cyber-purple': '#8b00ff',
+        'cyber-green': '#00ff41',
+        'cyber-dark': '#0a0a0f',
+        'cyber-light': '#e0e0e0',
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      fontFamily: {
-        'cyber': ['Cyberpunk', 'Courier New', 'monospace'],
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        glitch: {
+          '0%, 100%': { transform: 'translate(0)' },
+          '20%': { transform: 'translate(-2px, 2px)' },
+          '40%': { transform: 'translate(-2px, -2px)' },
+          '60%': { transform: 'translate(2px, 2px)' },
+          '80%': { transform: 'translate(2px, -2px)' },
+        },
+        scan: {
+          '0%': { transform: 'translateY(-2px)' },
+          '100%': { transform: 'translateY(100vh)' },
+        },
+        messageSlideIn: {
+          from: {
+            opacity: '0',
+            transform: 'translateY(20px)',
+          },
+          to: {
+            opacity: '1',
+            transform: 'translateY(0)',
+          },
+        },
       },
       animation: {
-        'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
-        'glitch': 'glitch-animation 3s infinite linear alternate-reverse',
-        'scanline': 'scanline 8s linear infinite',
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        glitch: "glitch 2s infinite",
+        scan: "scan 3s linear infinite",
+        messageSlideIn: "messageSlideIn 0.3s ease-out",
       },
-      keyframes: {
-        'pulse-glow': {
-          '0%, 100%': {
-            boxShadow: '0 0 5px #00ffff',
-          },
-          '50%': {
-            boxShadow: '0 0 20px #00ffff, 0 0 30px #00ffff',
-          },
-        },
-        'glitch-animation': {
-          '0%': { clipPath: 'inset(29% 0 25% 0)' },
-          '5%': { clipPath: 'inset(9% 0 38% 0)' },
-          '10%': { clipPath: 'inset(96% 0 1% 0)' },
-          '15%': { clipPath: 'inset(75% 0 23% 0)' },
-          '20%': { clipPath: 'inset(46% 0 50% 0)' },
-          '25%': { clipPath: 'inset(3% 0 46% 0)' },
-          '30%': { clipPath: 'inset(82% 0 2% 0)' },
-          '35%': { clipPath: 'inset(88% 0 1% 0)' },
-          '40%': { clipPath: 'inset(15% 0 79% 0)' },
-          '45%': { clipPath: 'inset(40% 0 22% 0)' },
-          '50%': { clipPath: 'inset(37% 0 30% 0)' },
-          '55%': { clipPath: 'inset(73% 0 5% 0)' },
-          '60%': { clipPath: 'inset(59% 0 38% 0)' },
-          '65%': { clipPath: 'inset(48% 0 35% 0)' },
-          '70%': { clipPath: 'inset(67% 0 18% 0)' },
-          '75%': { clipPath: 'inset(9% 0 71% 0)' },
-          '80%': { clipPath: 'inset(25% 0 57% 0)' },
-          '85%': { clipPath: 'inset(75% 0 18% 0)' },
-          '90%': { clipPath: 'inset(56% 0 43% 0)' },
-          '95%': { clipPath: 'inset(5% 0 29% 0)' },
-          '100%': { clipPath: 'inset(57% 0 21% 0)' },
-        },
-        'scanline': {
-          '0%': { transform: 'translateY(-4px)' },
-          '100%': { transform: 'translateY(calc(100vh - 4px))' },
-        },
+      fontFamily: {
+        cyber: ['Orbitron', 'monospace'],
       },
     },
   },
-  plugins: [],
-}
+  plugins: [require("tailwindcss-animate")],
+} satisfies Config
 
 export default config

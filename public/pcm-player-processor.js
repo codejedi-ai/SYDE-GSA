@@ -1,48 +1,44 @@
 class PCMPlayerProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
-    this.bufferSize = 4096;
+    this.bufferSize = 24000 * 180;
     this.buffer = new Float32Array(this.bufferSize);
     this.writeIndex = 0;
     this.readIndex = 0;
-    this.availableData = 0;
-    
     this.port.onmessage = (event) => {
-      if (event.data.command === 'append') {
-        this.appendData(event.data.data);
+      if (event.data.command === 'endOfAudio') {
+        this.readIndex = this.writeIndex;
+        console.log("endOfAudio received, clearing the buffer.");
+        return;
       }
+      const int16Samples = new Int16Array(event.data);
+      this._enqueue(int16Samples);
     };
   }
-  
-  appendData(data) {
-    const float32Data = new Float32Array(data);
-    
-    for (let i = 0; i < float32Data.length; i++) {
-      this.buffer[this.writeIndex] = float32Data[i];
+
+  _enqueue(int16Samples) {
+    for (let i = 0; i < int16Samples.length; i++) {
+      const floatVal = int16Samples[i] / 32768;
+      this.buffer[this.writeIndex] = floatVal;
       this.writeIndex = (this.writeIndex + 1) % this.bufferSize;
-      
-      if (this.availableData < this.bufferSize) {
-        this.availableData++;
-      } else {
+      if (this.writeIndex === this.readIndex) {
         this.readIndex = (this.readIndex + 1) % this.bufferSize;
       }
     }
   }
-  
+
   process(inputs, outputs, parameters) {
     const output = outputs[0];
-    const outputChannel = output[0];
-    
-    for (let i = 0; i < outputChannel.length; i++) {
-      if (this.availableData > 0) {
-        outputChannel[i] = this.buffer[this.readIndex];
+    const framesPerBlock = output[0].length;
+    for (let frame = 0; frame < framesPerBlock; frame++) {
+      output[0][frame] = this.buffer[this.readIndex];
+      if (output.length > 1) {
+        output[1][frame] = this.buffer[this.readIndex];
+      }
+      if (this.readIndex != this.writeIndex) {
         this.readIndex = (this.readIndex + 1) % this.bufferSize;
-        this.availableData--;
-      } else {
-        outputChannel[i] = 0;
       }
     }
-    
     return true;
   }
 }
