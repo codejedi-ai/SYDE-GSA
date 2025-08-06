@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Galatea AI - Neural Interface",
+  title: "Vathsala - Neural Interface",
   description: "Advanced AI consciousness with cyberpunk neural interface",
     generator: 'v0.dev'
 };

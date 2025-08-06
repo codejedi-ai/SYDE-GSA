@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
@@ -9,25 +9,24 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const isAudio = searchParams.get('is_audio') || 'false';
     
-    const backendUrl = process.env.NEXT_JS_GOOGLE_ADK_URL || 'http://localhost:8000';
-    const backendResponse = await fetch(
-      `${backendUrl}/events/${sessionId}?is_audio=${isAudio}`,
-      {
-        headers: {
-          'Accept': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-        },
-      }
-    );
+    const backendHost = process.env.NEXT_PUBLIC_GOOGLE_ADK_CHAT_AGENT_HOST || 'http://localhost:8000';
+    const backendUrl = `${backendHost}/events/${sessionId}?is_audio=${isAudio}`;
+    
+    const response = await fetch(backendUrl, {
+      headers: {
+        'Accept': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+      },
+    });
 
-    if (!backendResponse.ok) {
-      throw new Error(`Backend responded with status: ${backendResponse.status}`);
+    if (!response.ok) {
+      throw new Error(`Backend responded with status: ${response.status}`);
     }
 
-    // Create a readable stream to proxy the SSE data
+    // Create a new ReadableStream that forwards the SSE data
     const stream = new ReadableStream({
       start(controller) {
-        const reader = backendResponse.body?.getReader();
+        const reader = response.body?.getReader();
         if (!reader) {
           controller.close();
           return;
@@ -45,20 +44,21 @@ export async function GET(
         }
 
         return pump();
-      },
+      }
     });
 
-    return new Response(stream, {
+    return new NextResponse(stream, {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Cache-Control',
       },
     });
   } catch (error) {
-    console.error('Error proxying SSE from backend:', error);
-    return new Response('Error connecting to backend', { status: 500 });
+    console.error('Error setting up SSE proxy:', error);
+    return NextResponse.json(
+      { error: 'Failed to establish SSE connection' },
+      { status: 500 }
+    );
   }
 }

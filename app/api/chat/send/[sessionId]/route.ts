@@ -8,8 +8,8 @@ export async function POST(
     const { sessionId } = params;
     const body = await request.json();
     
-    const backendUrl = process.env.NEXT_JS_GOOGLE_ADK_URL || 'http://localhost:8000';
-    const response = await fetch(`${backendUrl}/send/${sessionId}`, {
+    const backendHost = process.env.NEXT_PUBLIC_GOOGLE_ADK_CHAT_AGENT_HOST || 'http://localhost:8000';
+    const response = await fetch(`${backendHost}/send/${sessionId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -21,17 +21,11 @@ export async function POST(
       throw new Error(`Backend responded with status: ${response.status}`);
     }
 
-    const data = await response.text();
-    return new NextResponse(data, {
-      status: response.status,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error proxying to backend:', error);
+    console.error('Error forwarding message to backend:', error);
     return NextResponse.json(
-      { error: 'Failed to send message to backend' },
+      { error: 'Failed to send message' },
       { status: 500 }
     );
   }

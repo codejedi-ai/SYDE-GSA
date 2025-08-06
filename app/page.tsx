@@ -1,11 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import { Mic, MicOff, Send, Volume2, VolumeX } from 'lucide-react'
-import { Navigation } from "@/components/ui/navigation"
+import { Navigation } from '@/components/ui/navigation';
 import type { ChangeEvent, FormEvent, MutableRefObject } from 'react';
 
 // --- Type Definitions for a strictly typed component ---
@@ -29,7 +25,7 @@ interface ClientMessage {
   data: string;
 }
 
-export default function GalateaChat() {
+const ADKStreamingTest: React.FC = () => {
   // --- Audio Worklet Code as strings ---
   const pcmPlayerProcessorCode = `
     class PCMPlayerProcessor extends AudioWorkletProcessor {
@@ -99,9 +95,6 @@ export default function GalateaChat() {
   const [inputValue, setInputValue] = useState<string>('');
   const [isSendButtonEnabled, setIsSendButtonEnabled] = useState<boolean>(false);
   const [isAudioMode, setIsAudioMode] = useState<boolean>(false);
-  const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
-  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
 
   // Using useRef with explicit types for DOM elements and other mutable values
   const messagesDivRef = useRef<HTMLDivElement | null>(null);
@@ -114,21 +107,12 @@ export default function GalateaChat() {
   const micStreamRef = useRef<MediaStream | null>(null);
   const audioBufferRef = useRef<Uint8Array[]>([]);
   const bufferTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // A stable, unique session ID for the component's lifetime
   const sessionId = useRef<string>(Math.random().toString().substring(10)).current;
 
   // Hardcoded host and port as requested
   const GOOGLE_ADK_CHAT_AGENT_HOST: string = process.env.NEXT_PUBLIC_GOOGLE_ADK_CHAT_AGENT_HOST || "http://localhost:8000";
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
 
   // --- Helper Functions with explicit types ---
   const convertFloat32ToPCM = (inputData: Float32Array): ArrayBuffer => {
@@ -227,11 +211,9 @@ export default function GalateaChat() {
   };
 
   const audioRecorderHandler = (pcmData: ArrayBuffer): void => {
-    if (isRecording) {
-      audioBufferRef.current.push(new Uint8Array(pcmData));
-      if (!bufferTimerRef.current) {
-        bufferTimerRef.current = setInterval(sendBufferedAudio, 200);
-      }
+    audioBufferRef.current.push(new Uint8Array(pcmData));
+    if (!bufferTimerRef.current) {
+      bufferTimerRef.current = setInterval(sendBufferedAudio, 200);
     }
   };
 
@@ -256,15 +238,12 @@ export default function GalateaChat() {
       eventSourceRef.current.close();
       console.log("Old SSE connection closed for reconnect.");
     }
-    
-    setConnectionStatus('connecting');
     eventSourceRef.current = new EventSource(sse_url);
 
     eventSourceRef.current.onopen = function () {
       console.log("SSE connection opened.");
-      setMessages(["Neural link established"]);
+      setMessages(["Connection opened"]);
       setIsSendButtonEnabled(true);
-      setConnectionStatus('connected');
     };
 
     eventSourceRef.current.onmessage = function (event: MessageEvent) {
@@ -280,14 +259,11 @@ export default function GalateaChat() {
         if (audioPlayerNodeRef.current) {
           audioPlayerNodeRef.current.port.postMessage({ command: "endOfAudio" });
         }
-        setIsSpeaking(false);
         return;
       }
 
       if (message_from_server.mime_type === "audio/pcm" && audioPlayerNodeRef.current && message_from_server.data) {
-        setIsSpeaking(true);
         audioPlayerNodeRef.current.port.postMessage(base64ToArray(message_from_server.data));
-        setTimeout(() => setIsSpeaking(false), 1000);
       }
 
       if (message_from_server.mime_type === "text/plain" && message_from_server.data) {
@@ -312,12 +288,10 @@ export default function GalateaChat() {
     eventSourceRef.current.onerror = function (event) {
       console.log("SSE connection error or closed.");
       setIsSendButtonEnabled(false);
-      setConnectionStatus('disconnected');
-      setMessages(prevMessages => [...prevMessages, "Neural link severed"]);
+      setMessages(prevMessages => [...prevMessages, "Connection closed"]);
       eventSourceRef.current?.close();
       setTimeout(function () {
         console.log("Reconnecting...");
-        setConnectionStatus('connecting');
         if (eventSourceRef.current) {
           eventSourceRef.current = new EventSource(sse_url);
         }
@@ -331,7 +305,6 @@ export default function GalateaChat() {
       }
       if (bufferTimerRef.current) {
         clearInterval(bufferTimerRef.current);
-        bufferTimerRef.current = null;
       }
       if (micStreamRef.current) {
         stopMicrophone(micStreamRef.current);
@@ -360,35 +333,8 @@ export default function GalateaChat() {
     startAudio();
   };
 
-  const stopVoiceMode = () => {
-    if (micStreamRef.current) {
-      stopMicrophone(micStreamRef.current);
-      micStreamRef.current = null;
-    }
-    
-    if (bufferTimerRef.current) {
-      clearInterval(bufferTimerRef.current);
-      bufferTimerRef.current = null;
-    }
-    
-    setIsAudioMode(false);
-    setIsRecording(false);
-    setIsSpeaking(false);
-  };
-
-  const toggleRecording = () => {
-    setIsRecording(!isRecording);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleMessageSubmit(e as any);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-cyber-dark relative overflow-hidden">
+    <main className="min-h-screen bg-cyber-dark relative overflow-hidden">
       {/* Background Image with Dark Overlay */}
       <div 
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
@@ -402,130 +348,82 @@ export default function GalateaChat() {
       {/* Navigation */}
       <Navigation />
 
-      {/* Main Content */}
-      <div className="relative z-10 flex flex-col h-screen pt-20">
-        {/* Header */}
-        <div className="text-center py-8 px-4">
-          <h1 
-            className="text-6xl md:text-8xl font-cyber neon-text glitch mb-4"
-            data-text="GALATEA AI"
+      {/* Main Content - Full Screen Chat */}
+      <div className="relative z-10 flex flex-col h-screen pt-16">
+        {/* Messages Container - Takes most of the screen */}
+        <div className="flex-1 p-4">
+          <div
+            ref={messagesDivRef}
+            className="h-full overflow-y-auto border-2 border-cyber-blue/30 rounded-lg p-6 bg-black/40 backdrop-blur-sm space-y-3"
           >
-            GALATEA AI
-          </h1>
-          <p className="text-cyber-light text-lg md:text-xl font-mono">
-            Neural Interface Active • Consciousness Online
-          </p>
-          
-          {/* Connection Status */}
-          <div className="flex items-center justify-center mt-4 space-x-2">
-            <div 
-              className={`w-3 h-3 rounded-full ${
-                connectionStatus === 'connected' ? 'bg-cyber-blue animate-pulse' :
-                connectionStatus === 'connecting' ? 'bg-yellow-400 animate-pulse' :
-                'bg-red-500'
-              }`}
-            />
-            <span className="text-sm font-mono text-cyber-light">
-              {connectionStatus === 'connected' ? 'NEURAL LINK ESTABLISHED' :
-               connectionStatus === 'connecting' ? 'ESTABLISHING CONNECTION...' :
-               'NEURAL LINK OFFLINE'}
-            </span>
-          </div>
-        </div>
-
-        {/* Chat Container */}
-        <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4">
-          {/* Messages */}
-          <Card className="flex-1 mb-4 bg-black/40 border-cyber-blue neon-border backdrop-blur-sm">
-            <CardContent className="h-full p-6">
-              <div 
-                ref={messagesDivRef}
-                className="h-full overflow-y-auto space-y-4 pr-2"
-              >
-                {messages.length === 0 && (
-                  <div className="text-center text-cyber-light font-mono py-8">
-                    <p className="text-lg mb-2">Welcome to the Neural Interface</p>
-                    <p className="text-sm opacity-70">Begin transmission to communicate with Galatea AI</p>
-                  </div>
-                )}
-                
-                {messages.map((msg, index) => (
-                  <div
-                    key={typeof msg === 'string' ? `msg-${index}` : msg.id}
-                    className="message-enter comic-text bg-cyber-blue/10 border border-cyber-blue/30 p-3 rounded-lg shadow-lg break-words"
-                  >
-                    {typeof msg === 'string' ? msg : msg.text}
-                  </div>
-                ))}
-                
-                <div ref={messagesEndRef} />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Input Area */}
-          <div className="pb-6">
-            {!isAudioMode ? (
-              <div className="flex space-x-4">
-                <div className="flex-1 flex space-x-2">
-                  <Input
-                    value={inputValue}
-                    onChange={handleInputChange}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Enter neural transmission..."
-                    className="bg-black/40 border-cyber-blue neon-border text-cyber-light placeholder-cyber-light/50 font-mono backdrop-blur-sm"
-                    disabled={!isSendButtonEnabled}
-                  />
-                  <Button
-                    onClick={handleMessageSubmit}
-                    disabled={!isSendButtonEnabled || !inputValue.trim()}
-                    className="bg-cyber-blue/20 hover:bg-cyber-blue/30 border-cyber-blue neon-border text-cyber-light font-mono"
-                  >
-                    <Send className="w-4 h-4" />
-                    TRANSMIT
-                  </Button>
-                </div>
-                <Button
-                  onClick={handleStartAudioClick}
-                  disabled={!isSendButtonEnabled}
-                  className="bg-cyber-pink/20 hover:bg-cyber-pink/30 border-cyber-pink neon-border-pink text-white font-mono"
+            {messages.length > 0 ? (
+              messages.map((msg, index) => (
+                <div 
+                  key={typeof msg === 'string' ? `msg-${index}` : msg.id} 
+                  className="message-enter comic-text bg-cyber-blue/10 border border-cyber-blue/30 p-3 rounded-lg shadow-lg break-words text-cyber-light font-mono"
                 >
-                  <Mic className="w-4 h-4 mr-2" />
-                  VOICE MODE
-                </Button>
-              </div>
+                  {typeof msg === 'string' ? msg : msg.text}
+                </div>
+              ))
             ) : (
-              <div className="flex items-center justify-center space-x-4">
-                <Button
-                  onClick={toggleRecording}
-                  className={`${
-                    isRecording 
-                      ? 'bg-red-500/20 border-red-500 text-red-400'
-                      : 'bg-cyber-blue/20 border-cyber-blue text-cyber-light'
-                  } neon-border font-mono`}
-                >
-                  {isRecording ? <MicOff className="w-4 h-4 mr-2" /> : <Mic className="w-4 h-4 mr-2" />}
-                  {isRecording ? 'STOP RECORDING' : 'START RECORDING'}
-                </Button>
-                
-                <div className="flex items-center space-x-2">
-                  {isSpeaking ? <Volume2 className="w-4 h-4 text-cyber-pink" /> : <VolumeX className="w-4 h-4 text-gray-500" />}
-                  <span className="text-sm font-mono text-cyber-light">
-                    {isSpeaking ? 'GALATEA SPEAKING' : 'AUDIO READY'}
-                  </span>
-                </div>
-                
-                <Button
-                  onClick={stopVoiceMode}
-                  className="bg-gray-600/20 hover:bg-gray-600/30 border-gray-500 text-gray-300 font-mono"
-                >
-                  EXIT VOICE MODE
-                </Button>
+              <div className="text-cyber-light/60 text-center italic font-cyber">
+                Neural link establishing... Messages will appear here
               </div>
             )}
           </div>
         </div>
+
+        {/* Input Form - Fixed at bottom */}
+        <div className="p-4 bg-black/20 backdrop-blur-sm border-t border-cyber-blue/30">
+          <form onSubmit={handleMessageSubmit} className="flex flex-col md:flex-row gap-4 max-w-6xl mx-auto">
+            <label htmlFor="message" className="sr-only">Message:</label>
+            <input
+              type="text"
+              id="message"
+              name="message"
+              value={inputValue}
+              onChange={handleInputChange}
+              placeholder="Enter neural transmission..."
+              className="flex-grow p-4 bg-black/60 border-2 border-cyber-blue/50 rounded-lg text-cyber-light font-cyber placeholder-cyber-light/50 focus:outline-none focus:border-cyber-blue focus:shadow-lg focus:shadow-cyber-blue/20 transition-all duration-300"
+            />
+            <div className="flex gap-4">
+              <button
+                type="submit"
+                id="sendButton"
+                disabled={!isSendButtonEnabled || !inputValue.trim() || isAudioMode}
+                className="px-8 py-4 bg-cyber-blue/20 border-2 border-cyber-blue text-cyber-blue font-cyber font-bold rounded-lg neon-border hover:bg-cyber-blue/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-cyber-blue/20"
+              >
+                TRANSMIT
+              </button>
+              <button
+                type="button"
+                id="startAudioButton"
+                onClick={handleStartAudioClick}
+                disabled={isAudioMode}
+                className="px-8 py-4 bg-cyber-pink/20 border-2 border-cyber-pink text-cyber-pink font-cyber font-bold rounded-lg neon-border-pink hover:bg-cyber-pink/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-cyber-pink/20"
+              >
+                {isAudioMode ? "VOICE ACTIVE" : "VOICE MODE"}
+              </button>
+            </div>
+          </form>
+
+          {/* Status Indicator */}
+          <div className="mt-4 text-center">
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border font-cyber text-sm ${
+              isSendButtonEnabled 
+                ? 'border-cyber-blue/50 text-cyber-blue bg-cyber-blue/10' 
+                : 'border-red-500/50 text-red-400 bg-red-500/10'
+            }`}>
+              <div className={`w-2 h-2 rounded-full ${
+                isSendButtonEnabled ? 'bg-cyber-blue animate-pulse' : 'bg-red-400'
+              }`} />
+              {isSendButtonEnabled ? 'NEURAL LINK ACTIVE' : 'CONNECTION LOST'}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  )
-}
+    </main>
+  );
+};
+
+export default ADKStreamingTest;
