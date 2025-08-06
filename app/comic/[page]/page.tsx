@@ -1,4 +1,4 @@
-import { comicPages } from "@/lib/comic-data" // Keep for generateStaticParams
+import { comicPages } from "@/lib/.env" // Keep for generateStaticParams
 import ComicPageClient from "./ComicPageClient"
 
 export function generateStaticParams() {

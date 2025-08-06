@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, ArrowLeft, ArrowRight, Maximize2, Minimize2 } from "lucide-react"
-import type { ComicPanel } from "@/lib/comic-data"
+import type { ComicPanel } from "@/lib/.env"
 import { useRouter } from "next/navigation"
 import { useComicContext } from "@/app/context/comic-context"
 

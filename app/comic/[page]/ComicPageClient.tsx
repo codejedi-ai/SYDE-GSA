@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { ComicReader } from "@/components/comic/comic-reader"
 //import { ComicLoadingScreen } from "@/components/comic/comic-loading-screen"
-import { comicPages } from "@/lib/comic-data"
+import { comicPages } from "@/lib/.env"
 import { useParams, notFound, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"

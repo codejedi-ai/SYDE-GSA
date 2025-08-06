@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { comicPages } from "@/lib/comic-data"
+import { comicPages } from "@/lib/.env"
 
 export async function GET(request: Request, { params }: { params: { page: string } }) {
   const { page } = await params

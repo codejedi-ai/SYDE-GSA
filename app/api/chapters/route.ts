@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { comicPages } from "@/lib/comic-data"
+import { comicPages } from "@/lib/.env"
 
 // Group pages into chapters (4 pages per chapter)
 function getChapters() {

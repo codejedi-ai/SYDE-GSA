@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { ComicPage, ComicPanel } from "@/lib/comic-data"
+import type { ComicPage, ComicPanel } from "@/lib/.env"
 
 // Types for the context
 interface CoverData {

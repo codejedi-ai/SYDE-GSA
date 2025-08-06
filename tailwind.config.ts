@@ -1,23 +1,8 @@
 import type { Config } from "tailwindcss"
 
-const config = {
-  darkMode: ["class"],
-  content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-    "*.{js,ts,jsx,tsx,mdx}",
-  ],
-  prefix: "",
+const config: Config = {
+  content: ["./pages/**/*.{js,ts,jsx,tsx,mdx}", "./components/**/*.{js,ts,jsx,tsx,mdx}", "./app/**/*.{js,ts,jsx,tsx,mdx}", "*.{js,ts,jsx,tsx,mdx}"],
   theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
     extend: {
       colors: {
         border: "hsl(var(--border))",
@@ -53,52 +38,66 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        cyber: {
-          blue: "#00ffff",
-          pink: "#ff0080",
-          dark: "#050714",
-          darker: "#030409",
-          light: "#c0fdff",
-        },
+        // Cyberpunk colors
+        'cyber-dark': '#050714',
+        'cyber-blue': '#00ffff',
+        'cyber-light': '#66ffff',
+        'cyber-pink': '#ff0080',
+        'cyber-purple': '#8b59fb',
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
-        },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
-        },
-        flicker: {
-          "0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100%": {
-            opacity: "0.99",
-            filter: "brightness(1)",
-          },
-          "20%, 21.999%, 63%, 63.999%, 65%, 69.999%": {
-            opacity: "0.4",
-            filter: "brightness(0.8)",
-          },
-        },
-        pulse: {
-          "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.5" },
-        },
+      fontFamily: {
+        'cyber': ['Cyberpunk', 'Courier New', 'monospace'],
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        flicker: "flicker 3s linear infinite",
-        pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+        'glitch': 'glitch-animation 3s infinite linear alternate-reverse',
+        'scanline': 'scanline 8s linear infinite',
+      },
+      keyframes: {
+        'pulse-glow': {
+          '0%, 100%': {
+            boxShadow: '0 0 5px #00ffff',
+          },
+          '50%': {
+            boxShadow: '0 0 20px #00ffff, 0 0 30px #00ffff',
+          },
+        },
+        'glitch-animation': {
+          '0%': { clipPath: 'inset(29% 0 25% 0)' },
+          '5%': { clipPath: 'inset(9% 0 38% 0)' },
+          '10%': { clipPath: 'inset(96% 0 1% 0)' },
+          '15%': { clipPath: 'inset(75% 0 23% 0)' },
+          '20%': { clipPath: 'inset(46% 0 50% 0)' },
+          '25%': { clipPath: 'inset(3% 0 46% 0)' },
+          '30%': { clipPath: 'inset(82% 0 2% 0)' },
+          '35%': { clipPath: 'inset(88% 0 1% 0)' },
+          '40%': { clipPath: 'inset(15% 0 79% 0)' },
+          '45%': { clipPath: 'inset(40% 0 22% 0)' },
+          '50%': { clipPath: 'inset(37% 0 30% 0)' },
+          '55%': { clipPath: 'inset(73% 0 5% 0)' },
+          '60%': { clipPath: 'inset(59% 0 38% 0)' },
+          '65%': { clipPath: 'inset(48% 0 35% 0)' },
+          '70%': { clipPath: 'inset(67% 0 18% 0)' },
+          '75%': { clipPath: 'inset(9% 0 71% 0)' },
+          '80%': { clipPath: 'inset(25% 0 57% 0)' },
+          '85%': { clipPath: 'inset(75% 0 18% 0)' },
+          '90%': { clipPath: 'inset(56% 0 43% 0)' },
+          '95%': { clipPath: 'inset(5% 0 29% 0)' },
+          '100%': { clipPath: 'inset(57% 0 21% 0)' },
+        },
+        'scanline': {
+          '0%': { transform: 'translateY(-4px)' },
+          '100%': { transform: 'translateY(calc(100vh - 4px))' },
+        },
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config
+  plugins: [],
+}
 
 export default config
