@@ -171,6 +171,24 @@
   80% { transform: translate(-2px, -2px); }
 }
 
+/* Scan Line Effect */
+.scan-line {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyber-blue), transparent);
+  animation: scan 3s linear infinite;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+@keyframes scan {
+  0% { transform: translateY(-2px); }
+  100% { transform: translateY(100vh); }
+}
+
 /* Comic Panel Styling */
 .comic-panel {
   background: rgba(0, 0, 0, 0.8);
@@ -236,8 +254,23 @@
 ::-webkit-scrollbar-thumb {
   background: var(--cyber-blue);
   border-radius: 4px;
+  box-shadow: 0 0 5px var(--cyber-blue);
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--cyber-pink);
+  box-shadow: 0 0 5px var(--cyber-pink);
+}
+
+/* Button Hover Effects */
+.neon-border:hover {
+  box-shadow: 
+    0 0 10px var(--cyber-blue),
+    inset 0 0 10px rgba(0, 255, 255, 0.2);
+}
+
+.neon-border-pink:hover {
+  box-shadow: 
+    0 0 10px var(--cyber-pink),
+    inset 0 0 10px rgba(255, 0, 128, 0.2);
 }
