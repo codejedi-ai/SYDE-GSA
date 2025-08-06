@@ -18,36 +18,12 @@ export async function GET(
         'Cache-Control': 'no-cache',
       },
     });
-
+    
     if (!response.ok) {
-      throw new Error(`Backend responded with status: ${response.status}`);
+      throw new Error(`Backend responded with ${response.status}`);
     }
-
-    // Create a new ReadableStream that forwards the SSE data
-    const stream = new ReadableStream({
-      start(controller) {
-        const reader = response.body?.getReader();
-        if (!reader) {
-          controller.close();
-          return;
-        }
-
-        function pump(): Promise<void> {
-          return reader.read().then(({ done, value }) => {
-            if (done) {
-              controller.close();
-              return;
-            }
-            controller.enqueue(value);
-            return pump();
-          });
-        }
-
-        return pump();
-      }
-    });
-
-    return new NextResponse(stream, {
+    
+    return new NextResponse(response.body, {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -55,9 +31,9 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error setting up SSE proxy:', error);
+    console.error('Error proxying SSE to backend:', error);
     return NextResponse.json(
-      { error: 'Failed to establish SSE connection' },
+      { error: 'Failed to connect to events stream' },
       { status: 500 }
     );
   }

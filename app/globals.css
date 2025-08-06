@@ -68,26 +68,92 @@
   }
 }
 
-/* Cyberpunk Theme Variables */
+/* Cyberpunk Theme Colors */
 :root {
-  --cyber-blue: #00ffff;
+  --cyber-blue: #00d4ff;
   --cyber-pink: #ff0080;
-  --cyber-purple: #8b00ff;
-  --cyber-green: #00ff41;
+  --cyber-purple: #8b59fb;
+  --cyber-green: #00ff88;
   --cyber-dark: #0a0a0f;
-  --cyber-light: #e0e0e0;
+  --cyber-light: #e0e6ed;
 }
 
-/* Cyberpunk Fonts */
+/* Custom Cyberpunk Styles */
+.bg-cyber-dark {
+  background-color: var(--cyber-dark);
+}
+
+.text-cyber-blue {
+  color: var(--cyber-blue);
+}
+
+.text-cyber-pink {
+  color: var(--cyber-pink);
+}
+
+.text-cyber-light {
+  color: var(--cyber-light);
+}
+
+.border-cyber-blue {
+  border-color: var(--cyber-blue);
+}
+
+.border-cyber-pink {
+  border-color: var(--cyber-pink);
+}
+
+.bg-cyber-blue\/10 {
+  background-color: rgba(0, 212, 255, 0.1);
+}
+
+.bg-cyber-blue\/20 {
+  background-color: rgba(0, 212, 255, 0.2);
+}
+
+.bg-cyber-blue\/30 {
+  background-color: rgba(0, 212, 255, 0.3);
+}
+
+.bg-cyber-pink\/10 {
+  background-color: rgba(255, 0, 128, 0.1);
+}
+
+.bg-cyber-pink\/20 {
+  background-color: rgba(255, 0, 128, 0.2);
+}
+
+.bg-cyber-pink\/30 {
+  background-color: rgba(255, 0, 128, 0.3);
+}
+
+.border-cyber-blue\/30 {
+  border-color: rgba(0, 212, 255, 0.3);
+}
+
+.border-cyber-blue\/50 {
+  border-color: rgba(0, 212, 255, 0.5);
+}
+
+.border-cyber-pink\/30 {
+  border-color: rgba(255, 0, 128, 0.3);
+}
+
+.text-cyber-light\/50 {
+  color: rgba(224, 230, 237, 0.5);
+}
+
+.text-cyber-light\/60 {
+  color: rgba(224, 230, 237, 0.6);
+}
+
+/* Orbitron Font */
 .font-cyber {
   font-family: 'Orbitron', monospace;
-  font-weight: 700;
-  letter-spacing: 0.1em;
 }
 
-/* Neon Text Effects */
+/* Neon Effects */
 .neon-text {
-  color: var(--cyber-blue);
   text-shadow: 
     0 0 5px var(--cyber-blue),
     0 0 10px var(--cyber-blue),
@@ -95,28 +161,16 @@
     0 0 20px var(--cyber-blue);
 }
 
-.neon-text-pink {
-  color: var(--cyber-pink);
-  text-shadow: 
-    0 0 5px var(--cyber-pink),
-    0 0 10px var(--cyber-pink),
-    0 0 15px var(--cyber-pink),
-    0 0 20px var(--cyber-pink);
-}
-
-/* Neon Border Effects */
 .neon-border {
-  border-color: var(--cyber-blue);
   box-shadow: 
     0 0 5px var(--cyber-blue),
-    inset 0 0 5px var(--cyber-blue);
+    inset 0 0 5px rgba(0, 212, 255, 0.1);
 }
 
 .neon-border-pink {
-  border-color: var(--cyber-pink);
   box-shadow: 
     0 0 5px var(--cyber-pink),
-    inset 0 0 5px var(--cyber-pink);
+    inset 0 0 5px rgba(255, 0, 128, 0.1);
 }
 
 /* Glitch Effect */
@@ -176,7 +230,7 @@
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
+  width: 100%;
   height: 2px;
   background: linear-gradient(90deg, transparent, var(--cyber-blue), transparent);
   animation: scan 3s linear infinite;
@@ -187,33 +241,6 @@
 @keyframes scan {
   0% { transform: translateY(-2px); }
   100% { transform: translateY(100vh); }
-}
-
-/* Comic Panel Styling */
-.comic-panel {
-  background: rgba(0, 0, 0, 0.8);
-  border: 2px solid var(--cyber-blue);
-  border-radius: 8px;
-  box-shadow: 
-    0 0 20px rgba(0, 255, 255, 0.3),
-    inset 0 0 20px rgba(0, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-}
-
-.comic-text {
-  font-family: 'Orbitron', monospace;
-  color: var(--cyber-light);
-}
-
-.comic-narration {
-  font-family: 'Orbitron', monospace;
-  color: var(--cyber-blue);
-  font-style: italic;
-  text-align: center;
-  padding: 1rem;
-  background: rgba(0, 255, 255, 0.1);
-  border-radius: 4px;
-  border-left: 4px solid var(--cyber-blue);
 }
 
 /* Message Animation */
@@ -232,45 +259,17 @@
   }
 }
 
-/* Custom Colors */
-.text-cyber-blue { color: var(--cyber-blue); }
-.text-cyber-pink { color: var(--cyber-pink); }
-.text-cyber-light { color: var(--cyber-light); }
-.bg-cyber-dark { background-color: var(--cyber-dark); }
-.bg-cyber-blue { background-color: var(--cyber-blue); }
-.bg-cyber-pink { background-color: var(--cyber-pink); }
-.border-cyber-blue { border-color: var(--cyber-blue); }
-.border-cyber-pink { border-color: var(--cyber-pink); }
-
-/* Scrollbar Styling */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--cyber-blue);
-  border-radius: 4px;
-  box-shadow: 0 0 5px var(--cyber-blue);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--cyber-pink);
-  box-shadow: 0 0 5px var(--cyber-pink);
-}
-
-/* Button Hover Effects */
-.neon-border:hover {
+/* Comic Panel Effect */
+.comic-panel {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(139, 89, 251, 0.1) 100%);
+  border: 2px solid var(--cyber-blue);
+  border-radius: 15px;
   box-shadow: 
-    0 0 10px var(--cyber-blue),
-    inset 0 0 10px rgba(0, 255, 255, 0.2);
+    0 0 20px rgba(0, 212, 255, 0.3),
+    inset 0 0 20px rgba(0, 212, 255, 0.1);
 }
 
-.neon-border-pink:hover {
-  box-shadow: 
-    0 0 10px var(--cyber-pink),
-    inset 0 0 10px rgba(255, 0, 128, 0.2);
+.comic-text {
+  font-family: 'Orbitron', monospace;
+  text-shadow: 0 0 3px rgba(0, 212, 255, 0.5);
 }

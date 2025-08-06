@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Menu, X, Home, Settings, Info } from 'lucide-react'
-import { Button } from './button'
+import { Menu, X } from 'lucide-react'
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
@@ -12,10 +11,10 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center">
-            <div className="text-cyber-blue font-cyber text-xl font-bold">
+          <div className="flex-shrink-0">
+            <h1 className="text-2xl font-cyber text-cyber-blue neon-text">
               VATHSALA
-            </div>
+            </h1>
           </div>
 
           {/* Desktop Navigation */}
@@ -23,37 +22,33 @@ export function Navigation() {
             <div className="ml-10 flex items-baseline space-x-4">
               <a
                 href="#"
-                className="text-cyber-light hover:text-cyber-blue px-3 py-2 rounded-md text-sm font-mono transition-colors"
+                className="text-cyber-light hover:text-cyber-blue px-3 py-2 rounded-md text-sm font-cyber transition-colors duration-300"
               >
-                <Home className="w-4 h-4 inline mr-2" />
-                Interface
+                NEURAL INTERFACE
               </a>
               <a
                 href="#"
-                className="text-cyber-light hover:text-cyber-blue px-3 py-2 rounded-md text-sm font-mono transition-colors"
+                className="text-cyber-light hover:text-cyber-blue px-3 py-2 rounded-md text-sm font-cyber transition-colors duration-300"
               >
-                <Settings className="w-4 h-4 inline mr-2" />
-                Neural Config
+                CONSCIOUSNESS
               </a>
               <a
                 href="#"
-                className="text-cyber-light hover:text-cyber-blue px-3 py-2 rounded-md text-sm font-mono transition-colors"
+                className="text-cyber-light hover:text-cyber-blue px-3 py-2 rounded-md text-sm font-cyber transition-colors duration-300"
               >
-                <Info className="w-4 h-4 inline mr-2" />
-                System Info
+                SYSTEM STATUS
               </a>
             </div>
           </div>
 
           {/* Mobile menu button */}
           <div className="md:hidden">
-            <Button
+            <button
               onClick={() => setIsOpen(!isOpen)}
-              className="bg-transparent border-cyber-blue text-cyber-blue hover:bg-cyber-blue/20"
-              size="sm"
+              className="text-cyber-light hover:text-cyber-blue p-2 rounded-md transition-colors duration-300"
             >
-              {isOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            </Button>
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </div>
         </div>
       </div>
@@ -64,24 +59,21 @@ export function Navigation() {
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-black/90 backdrop-blur-sm border-t border-cyber-blue/30">
             <a
               href="#"
-              className="text-cyber-light hover:text-cyber-blue block px-3 py-2 rounded-md text-base font-mono transition-colors"
+              className="text-cyber-light hover:text-cyber-blue block px-3 py-2 rounded-md text-base font-cyber transition-colors duration-300"
             >
-              <Home className="w-4 h-4 inline mr-2" />
-              Interface
+              NEURAL INTERFACE
             </a>
             <a
               href="#"
-              className="text-cyber-light hover:text-cyber-blue block px-3 py-2 rounded-md text-base font-mono transition-colors"
+              className="text-cyber-light hover:text-cyber-blue block px-3 py-2 rounded-md text-base font-cyber transition-colors duration-300"
             >
-              <Settings className="w-4 h-4 inline mr-2" />
-              Neural Config
+              CONSCIOUSNESS
             </a>
             <a
               href="#"
-              className="text-cyber-light hover:text-cyber-blue block px-3 py-2 rounded-md text-base font-mono transition-colors"
+              className="text-cyber-light hover:text-cyber-blue block px-3 py-2 rounded-md text-base font-cyber transition-colors duration-300"
             >
-              <Info className="w-4 h-4 inline mr-2" />
-              System Info
+              SYSTEM STATUS
             </a>
           </div>
         </div>

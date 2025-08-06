@@ -93,7 +93,6 @@ const ADKStreamingTest: React.FC = () => {
   // --- State and Refs ---
   const [messages, setMessages] = useState<Array<Message | string>>([]);
   const [inputValue, setInputValue] = useState<string>('');
-  const [isSendButtonEnabled, setIsSendButtonEnabled] = useState<boolean>(false);
   const [isAudioMode, setIsAudioMode] = useState<boolean>(false);
 
   // Using useRef with explicit types for DOM elements and other mutable values
@@ -242,8 +241,6 @@ const ADKStreamingTest: React.FC = () => {
 
     eventSourceRef.current.onopen = function () {
       console.log("SSE connection opened.");
-      setMessages(["Connection opened"]);
-      setIsSendButtonEnabled(true);
     };
 
     eventSourceRef.current.onmessage = function (event: MessageEvent) {
@@ -287,8 +284,6 @@ const ADKStreamingTest: React.FC = () => {
 
     eventSourceRef.current.onerror = function (event) {
       console.log("SSE connection error or closed.");
-      setIsSendButtonEnabled(false);
-      setMessages(prevMessages => [...prevMessages, "Connection closed"]);
       eventSourceRef.current?.close();
       setTimeout(function () {
         console.log("Reconnecting...");
@@ -390,7 +385,7 @@ const ADKStreamingTest: React.FC = () => {
               <button
                 type="submit"
                 id="sendButton"
-                disabled={!isSendButtonEnabled || !inputValue.trim() || isAudioMode}
+                disabled={!inputValue.trim() || isAudioMode}
                 className="px-8 py-4 bg-cyber-blue/20 border-2 border-cyber-blue text-cyber-blue font-cyber font-bold rounded-lg neon-border hover:bg-cyber-blue/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-cyber-blue/20"
               >
                 TRANSMIT
@@ -406,20 +401,6 @@ const ADKStreamingTest: React.FC = () => {
               </button>
             </div>
           </form>
-
-          {/* Status Indicator */}
-          <div className="mt-4 text-center">
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border font-cyber text-sm ${
-              isSendButtonEnabled 
-                ? 'border-cyber-blue/50 text-cyber-blue bg-cyber-blue/10' 
-                : 'border-red-500/50 text-red-400 bg-red-500/10'
-            }`}>
-              <div className={`w-2 h-2 rounded-full ${
-                isSendButtonEnabled ? 'bg-cyber-blue animate-pulse' : 'bg-red-400'
-              }`} />
-              {isSendButtonEnabled ? 'NEURAL LINK ACTIVE' : 'CONNECTION LOST'}
-            </div>
-          </div>
         </div>
       </div>
     </main>
