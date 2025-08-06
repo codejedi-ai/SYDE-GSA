@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import type { ChangeEvent, FormEvent } from 'react';
+import type { ChangeEvent, FormEvent, MutableRefObject } from 'react';
 
 // --- Type Definitions for a strictly typed component ---
 // Define the shape of a single message to be displayed in the UI
@@ -24,7 +24,7 @@ interface ClientMessage {
   data: string;
 }
 
-const GalateaChat: React.FC = () => {
+const ADKStreamingTest: React.FC = () => {
   // --- Audio Worklet Code as strings ---
   const pcmPlayerProcessorCode = `
     class PCMPlayerProcessor extends AudioWorkletProcessor {
@@ -44,7 +44,6 @@ const GalateaChat: React.FC = () => {
           this._enqueue(int16Samples);
         };
       }
-
       _enqueue(int16Samples) {
         for (let i = 0; i < int16Samples.length; i++) {
           const floatVal = int16Samples[i] / 32768;
@@ -55,7 +54,6 @@ const GalateaChat: React.FC = () => {
           }
         }
       }
-
       process(inputs, outputs, parameters) {
         const output = outputs[0];
         const framesPerBlock = output[0].length;
@@ -71,7 +69,6 @@ const GalateaChat: React.FC = () => {
         return true;
       }
     }
-
     registerProcessor('pcm-player-processor', PCMPlayerProcessor);
   `;
 
@@ -80,7 +77,6 @@ const GalateaChat: React.FC = () => {
       constructor() {
         super();
       }
-
       process(inputs, outputs, parameters) {
         if (inputs.length > 0 && inputs[0].length > 0) {
           const inputChannel = inputs[0][0];
@@ -90,7 +86,6 @@ const GalateaChat: React.FC = () => {
         return true;
       }
     }
-
     registerProcessor("pcm-recorder-processor", PCMProcessor);
   `;
 
@@ -242,11 +237,11 @@ const GalateaChat: React.FC = () => {
       eventSourceRef.current.close();
       console.log("Old SSE connection closed for reconnect.");
     }
-
     eventSourceRef.current = new EventSource(sse_url);
+
     eventSourceRef.current.onopen = function () {
       console.log("SSE connection opened.");
-      setMessages(["Neural link established..."]);
+      setMessages(["Connection opened"]);
       setIsSendButtonEnabled(true);
     };
 
@@ -292,7 +287,7 @@ const GalateaChat: React.FC = () => {
     eventSourceRef.current.onerror = function (event) {
       console.log("SSE connection error or closed.");
       setIsSendButtonEnabled(false);
-      setMessages(prevMessages => [...prevMessages, "Neural link severed..."]);
+      setMessages(prevMessages => [...prevMessages, "Connection closed"]);
       eventSourceRef.current?.close();
       setTimeout(function () {
         console.log("Reconnecting...");
@@ -338,111 +333,84 @@ const GalateaChat: React.FC = () => {
   };
 
   return (
-    <main 
-      className="min-h-screen relative"
-      style={{
-        backgroundImage: 'url(/background.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed'
-      }}
-    >
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+    <main className="min-h-screen bg-cyber-dark relative overflow-hidden">
+      {/* Background overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-purple-500/5 to-pink-500/5" />
       
-      {/* Main content */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4">
-        <div className="w-full max-w-4xl">
-          {/* Title */}
+        <div className="w-full max-w-4xl comic-panel p-8">
+          {/* Header */}
           <div className="text-center mb-8">
-            <h1 
-              className="text-6xl font-cyber neon-text glitch mb-4"
-              data-text="GALATEA AI"
-            >
-              GALATEA AI
-            </h1>
-            <p className="text-cyber-light text-xl font-cyber">
-              Neural Interface Active
+            <p className="text-cyber-light font-cyber text-lg opacity-80">
+              Neural Interface • Voice Communication System
             </p>
           </div>
 
-          {/* Chat Interface */}
-          <div className="comic-panel p-6 mb-6">
-            <div
-              ref={messagesDivRef}
-              className="h-96 overflow-y-auto p-4 mb-4 space-y-3 bg-black/40 rounded-lg border border-cyber-blue/30"
-            >
-              {messages.length > 0 ? (
-                messages.map((msg, index) => (
-                  <div 
-                    key={typeof msg === 'string' ? `msg-${index}` : msg.id} 
-                    className={`message-enter p-3 rounded-lg ${
-                      typeof msg === 'string' 
-                        ? 'comic-narration' 
-                        : msg.text.startsWith('>')
-                          ? 'comic-text bg-cyber-blue/20 border-l-4 border-cyber-blue text-cyber-light'
-                          : 'comic-text bg-cyber-pink/20 border-l-4 border-cyber-pink text-cyber-light'
-                    }`}
-                  >
-                    {typeof msg === 'string' ? msg : msg.text}
-                  </div>
-                ))
-              ) : (
-                <div className="text-cyber-light/60 text-center italic font-cyber">
-                  Awaiting neural synchronization...
+          {/* Messages Container */}
+          <div
+            ref={messagesDivRef}
+            className="h-96 overflow-y-auto border-2 border-cyber-blue/30 rounded-lg p-6 bg-black/40 mb-6 space-y-3 backdrop-blur-sm"
+          >
+            {messages.length > 0 ? (
+              messages.map((msg, index) => (
+                <div 
+                  key={typeof msg === 'string' ? `msg-${index}` : msg.id} 
+                  className="message-enter comic-text bg-cyber-blue/10 border border-cyber-blue/30 p-3 rounded-lg shadow-lg break-words"
+                >
+                  {typeof msg === 'string' ? msg : msg.text}
                 </div>
-              )}
-            </div>
-
-            {/* Input Form */}
-            <form onSubmit={handleMessageSubmit} className="flex flex-col md:flex-row gap-4">
-              <label htmlFor="message" className="sr-only">Message:</label>
-              <input
-                type="text"
-                id="message"
-                name="message"
-                value={inputValue}
-                onChange={handleInputChange}
-                placeholder="Enter neural command..."
-                className="flex-grow p-4 bg-black/60 border-2 border-cyber-blue/50 rounded-lg text-cyber-light placeholder-cyber-light/50 font-cyber focus:border-cyber-blue focus:outline-none"
-                disabled={isAudioMode}
-              />
-              <div className="flex gap-4">
-                <button
-                  type="submit"
-                  id="sendButton"
-                  disabled={!isSendButtonEnabled || !inputValue.trim() || isAudioMode}
-                  className="px-8 py-4 bg-cyber-blue/20 text-cyber-blue font-cyber font-bold rounded-lg border-2 border-cyber-blue hover:bg-cyber-blue hover:text-black transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed neon-border"
-                >
-                  TRANSMIT
-                </button>
-                <button
-                  type="button"
-                  id="startAudioButton"
-                  onClick={handleStartAudioClick}
-                  disabled={isAudioMode}
-                  className="px-8 py-4 bg-cyber-pink/20 text-cyber-pink font-cyber font-bold rounded-lg border-2 border-cyber-pink hover:bg-cyber-pink hover:text-black transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed neon-border-pink"
-                >
-                  {isAudioMode ? "VOICE ACTIVE" : "VOICE MODE"}
-                </button>
+              ))
+            ) : (
+              <div className="text-cyber-light/60 text-center italic font-cyber">
+                Neural link establishing... Messages will appear here
               </div>
-            </form>
+            )}
           </div>
 
-          {/* Status */}
-          <div className="text-center">
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${
+          {/* Input Form */}
+          <form onSubmit={handleMessageSubmit} className="flex flex-col md:flex-row gap-4">
+            <label htmlFor="message" className="sr-only">Message:</label>
+            <input
+              type="text"
+              id="message"
+              name="message"
+              value={inputValue}
+              onChange={handleInputChange}
+              placeholder="Enter neural transmission..."
+              className="flex-grow p-4 bg-black/60 border-2 border-cyber-blue/50 rounded-lg text-cyber-light font-cyber placeholder-cyber-light/50 focus:outline-none focus:border-cyber-blue focus:shadow-lg focus:shadow-cyber-blue/20 transition-all duration-300"
+            />
+            <div className="flex gap-4">
+              <button
+                type="submit"
+                id="sendButton"
+                disabled={!isSendButtonEnabled || !inputValue.trim() || isAudioMode}
+                className="px-8 py-4 bg-cyber-blue/20 border-2 border-cyber-blue text-cyber-blue font-cyber font-bold rounded-lg neon-border hover:bg-cyber-blue/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-cyber-blue/20"
+              >
+                TRANSMIT
+              </button>
+              <button
+                type="button"
+                id="startAudioButton"
+                onClick={handleStartAudioClick}
+                disabled={isAudioMode}
+                className="px-8 py-4 bg-cyber-pink/20 border-2 border-cyber-pink text-cyber-pink font-cyber font-bold rounded-lg neon-border-pink hover:bg-cyber-pink/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-cyber-pink/20"
+              >
+                {isAudioMode ? "VOICE ACTIVE" : "VOICE MODE"}
+              </button>
+            </div>
+          </form>
+
+          {/* Status Indicator */}
+          <div className="mt-6 text-center">
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border font-cyber text-sm ${
               isSendButtonEnabled 
-                ? 'border-cyber-blue text-cyber-blue' 
-                : 'border-cyber-pink text-cyber-pink'
+                ? 'border-cyber-blue/50 text-cyber-blue bg-cyber-blue/10' 
+                : 'border-red-500/50 text-red-400 bg-red-500/10'
             }`}>
               <div className={`w-2 h-2 rounded-full ${
-                isSendButtonEnabled ? 'bg-cyber-blue animate-pulse' : 'bg-cyber-pink'
-              }`}></div>
-              <span className="font-cyber text-sm">
-                {isSendButtonEnabled ? 'NEURAL LINK ACTIVE' : 'RECONNECTING...'}
-              </span>
+                isSendButtonEnabled ? 'bg-cyber-blue animate-pulse' : 'bg-red-400'
+              }`} />
+              {isSendButtonEnabled ? 'NEURAL LINK ACTIVE' : 'CONNECTION LOST'}
             </div>
           </div>
         </div>
@@ -451,4 +419,4 @@ const GalateaChat: React.FC = () => {
   );
 };
 
-export default GalateaChat;
+export default ADKStreamingTest;
