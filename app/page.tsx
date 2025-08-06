@@ -25,6 +25,70 @@ interface ClientMessage {
 }
 
 const ADKStreamingTest: React.FC = () => {
+  // --- Audio Worklet Code as strings ---
+  const pcmPlayerProcessorCode = `
+    class PCMPlayerProcessor extends AudioWorkletProcessor {
+      constructor() {
+        super();
+        this.bufferSize = 24000 * 180;
+        this.buffer = new Float32Array(this.bufferSize);
+        this.writeIndex = 0;
+        this.readIndex = 0;
+        this.port.onmessage = (event) => {
+          if (event.data.command === 'endOfAudio') {
+            this.readIndex = this.writeIndex;
+            console.log("endOfAudio received, clearing the buffer.");
+            return;
+          }
+          const int16Samples = new Int16Array(event.data);
+          this._enqueue(int16Samples);
+        };
+      }
+      _enqueue(int16Samples) {
+        for (let i = 0; i < int16Samples.length; i++) {
+          const floatVal = int16Samples[i] / 32768;
+          this.buffer[this.writeIndex] = floatVal;
+          this.writeIndex = (this.writeIndex + 1) % this.bufferSize;
+          if (this.writeIndex === this.readIndex) {
+            this.readIndex = (this.readIndex + 1) % this.bufferSize;
+          }
+        }
+      }
+      process(inputs, outputs, parameters) {
+        const output = outputs[0];
+        const framesPerBlock = output[0].length;
+        for (let frame = 0; frame < framesPerBlock; frame++) {
+          output[0][frame] = this.buffer[this.readIndex];
+          if (output.length > 1) {
+            output[1][frame] = this.buffer[this.readIndex];
+          }
+          if (this.readIndex != this.writeIndex) {
+            this.readIndex = (this.readIndex + 1) % this.bufferSize;
+          }
+        }
+        return true;
+      }
+    }
+    registerProcessor('pcm-player-processor', PCMPlayerProcessor);
+  `;
+
+  const pcmRecorderProcessorCode = `
+    class PCMProcessor extends AudioWorkletProcessor {
+      constructor() {
+        super();
+      }
+      process(inputs, outputs, parameters) {
+        if (inputs.length > 0 && inputs[0].length > 0) {
+          const inputChannel = inputs[0][0];
+          const inputCopy = new Float32Array(inputChannel);
+          this.port.postMessage(inputCopy);
+        }
+        return true;
+      }
+    }
+    registerProcessor("pcm-recorder-processor", PCMProcessor);
+  `;
+
   // --- State and Refs ---
   const [messages, setMessages] = useState<Array<Message | string>>([]);
   const [inputValue, setInputValue] = useState<string>('');
@@ -60,7 +124,9 @@ const ADKStreamingTest: React.FC = () => {
 
   const startAudioPlayerWorklet = async (): Promise<[AudioWorkletNode, AudioContext]> => {
     const audioContext = new AudioContext({ sampleRate: 24000 });
-    await audioContext.audioWorklet.addModule('/pcm-player-processor.js');
+    const blob = new Blob([pcmPlayerProcessorCode], { type: 'application/javascript' });
+    const workletURL = URL.createObjectURL(blob);
+    await audioContext.audioWorklet.addModule(workletURL);
     const audioPlayerNode = new AudioWorkletNode(audioContext, 'pcm-player-processor');
     audioPlayerNode.connect(audioContext.destination);
     return [audioPlayerNode, audioContext];
@@ -69,7 +135,9 @@ const ADKStreamingTest: React.FC = () => {
   const startAudioRecorderWorklet = async (audioRecorderHandler: (pcmData: ArrayBuffer) => void): Promise<[AudioWorkletNode, AudioContext, MediaStream]> => {
     const audioRecorderContext = new AudioContext({ sampleRate: 16000 });
     console.log("AudioContext sample rate:", audioRecorderContext.sampleRate);
-    await audioRecorderContext.audioWorklet.addModule('/pcm-recorder-processor.js');
+    const blob = new Blob([pcmRecorderProcessorCode], { type: 'application/javascript' });
+    const workletURL = URL.createObjectURL(blob);
+    await audioRecorderContext.audioWorklet.addModule(workletURL);
     const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 } });
     const source = audioRecorderContext.createMediaStreamSource(stream);
     const audioRecorderNode = new AudioWorkletNode(audioRecorderContext, "pcm-recorder-processor");
@@ -160,50 +228,6 @@ const ADKStreamingTest: React.FC = () => {
         micStreamRef.current = stream;
       }
     );
-  };
-
-  const stopAudio = (): void => {
-    console.log("Stopping audio conversation...");
-    
-    // Clear the buffer timer
-    if (bufferTimerRef.current) {
-      clearInterval(bufferTimerRef.current);
-      bufferTimerRef.current = null;
-    }
-    
-    // Stop microphone
-    if (micStreamRef.current) {
-      stopMicrophone(micStreamRef.current);
-      micStreamRef.current = null;
-    }
-    
-    // Close audio contexts
-    if (audioRecorderContextRef.current) {
-      audioRecorderContextRef.current.close();
-      audioRecorderContextRef.current = null;
-    }
-    
-    if (audioPlayerContextRef.current) {
-      audioPlayerContextRef.current.close();
-      audioPlayerContextRef.current = null;
-    }
-    
-    // Clear audio nodes
-    audioPlayerNodeRef.current = null;
-    audioRecorderNodeRef.current = null;
-    
-    // Clear audio buffer
-    audioBufferRef.current = [];
-    
-    // Reset audio mode
-    setIsAudioMode(false);
-    
-    // Add a message to indicate audio stopped
-    const stopMessage: Message = { 
-      id: Math.random().toString(36).substring(7), 
-      text: "Audio conversation stopped" 
-    };
-    setMessages(prevMessages => [...prevMessages, stopMessage]);
   };
 
   // --- useEffect Hook for SSE and cleanup ---
@@ -308,49 +332,42 @@ const ADKStreamingTest: React.FC = () => {
     startAudio();
   };
 
-  const handleStopAudioClick = (): void => {
-    stopAudio();
-  };
-
   return (
-    <main 
-      className="min-h-screen bg-cover bg-center bg-no-repeat relative"
-      style={{
-        backgroundImage: "url('/background.png')"
-      }}
-    >
-      {/* Dark overlay for better text readability */}
-      <div className="absolute inset-0 bg-black bg-opacity-70"></div>
+    <main className="min-h-screen bg-cyber-dark relative overflow-hidden">
+      {/* Background overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-purple-500/5 to-pink-500/5" />
       
-      <div className="relative z-10 flex flex-col min-h-screen p-4 font-inter">
-        {/* Full screen chat container */}
-        <div className="flex-1 flex flex-col w-full max-w-none">
-          <h1 className="text-3xl font-bold text-center text-cyber-light mb-6 font-cyber neon-text">
-            Start a voice conversation
-          </h1>
-          
-          {/* Messages area - takes up most of the screen */}
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="w-full max-w-4xl comic-panel p-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <p className="text-cyber-light font-cyber text-lg opacity-80">
+              Neural Interface • Voice Communication System
+            </p>
+          </div>
+
+          {/* Messages Container */}
           <div
             ref={messagesDivRef}
-            className="flex-1 overflow-y-auto border-2 border-cyber-blue rounded-lg p-4 bg-black bg-opacity-30 mb-4 space-y-2 neon-border backdrop-blur-sm"
+            className="h-96 overflow-y-auto border-2 border-cyber-blue/30 rounded-lg p-6 bg-black/40 mb-6 space-y-3 backdrop-blur-sm"
           >
             {messages.length > 0 ? (
               messages.map((msg, index) => (
                 <div 
                   key={typeof msg === 'string' ? `msg-${index}` : msg.id} 
-                  className="bg-gray-800 bg-opacity-60 text-cyber-light p-3 rounded-lg shadow-sm break-words comic-text message-enter border border-gray-600 backdrop-blur-sm"
+                  className="message-enter comic-text bg-cyber-blue/10 border border-cyber-blue/30 p-3 rounded-lg shadow-lg break-words"
                 >
                   {typeof msg === 'string' ? msg : msg.text}
                 </div>
               ))
             ) : (
-              <div className="text-cyber-light text-center italic opacity-70">
-                Messages will appear here...
+              <div className="text-cyber-light/60 text-center italic font-cyber">
+                Neural link establishing... Messages will appear here
               </div>
             )}
           </div>
-          
-          {/* Input form - fixed at bottom */}
+
+          {/* Input Form */}
           <form onSubmit={handleMessageSubmit} className="flex flex-col md:flex-row gap-4">
             <label htmlFor="message" className="sr-only">Message:</label>
             <input
@@ -359,39 +376,43 @@ const ADKStreamingTest: React.FC = () => {
               name="message"
               value={inputValue}
               onChange={handleInputChange}
-              placeholder="Type your message..."
-              className="flex-grow p-3 border-2 border-cyber-blue rounded-lg bg-black bg-opacity-30 text-cyber-light placeholder-cyber-light placeholder-opacity-50 focus:outline-none neon-border transition-all duration-300 backdrop-blur-sm"
+              placeholder="Enter neural transmission..."
+              className="flex-grow p-4 bg-black/60 border-2 border-cyber-blue/50 rounded-lg text-cyber-light font-cyber placeholder-cyber-light/50 focus:outline-none focus:border-cyber-blue focus:shadow-lg focus:shadow-cyber-blue/20 transition-all duration-300"
             />
             <div className="flex gap-4">
               <button
                 type="submit"
                 id="sendButton"
                 disabled={!isSendButtonEnabled || !inputValue.trim() || isAudioMode}
-                className="px-6 py-3 bg-cyber-blue text-black font-semibold rounded-lg shadow-md hover:bg-cyber-pink transition-all duration-300 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:text-gray-400 neon-border font-cyber"
+                className="px-8 py-4 bg-cyber-blue/20 border-2 border-cyber-blue text-cyber-blue font-cyber font-bold rounded-lg neon-border hover:bg-cyber-blue/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-cyber-blue/20"
               >
-                Send
+                TRANSMIT
               </button>
               <button
                 type="button"
                 id="startAudioButton"
                 onClick={handleStartAudioClick}
                 disabled={isAudioMode}
-                className="px-6 py-3 bg-cyber-pink text-black font-semibold rounded-lg shadow-md hover:bg-cyber-blue transition-all duration-300 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:text-gray-400 neon-border-pink font-cyber"
+                className="px-8 py-4 bg-cyber-pink/20 border-2 border-cyber-pink text-cyber-pink font-cyber font-bold rounded-lg neon-border-pink hover:bg-cyber-pink/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-cyber-pink/20"
               >
-                {isAudioMode ? "Audio Active" : "Start Audio"}
+                {isAudioMode ? "VOICE ACTIVE" : "VOICE MODE"}
               </button>
-              {isAudioMode && (
-                <button
-                  type="button"
-                  id="stopAudioButton"
-                  onClick={handleStopAudioClick}
-                  className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-all duration-300 neon-border-red font-cyber"
-                >
-                  Stop Audio
-                </button>
-              )}
             </div>
           </form>
+
+          {/* Status Indicator */}
+          <div className="mt-6 text-center">
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border font-cyber text-sm ${
+              isSendButtonEnabled 
+                ? 'border-cyber-blue/50 text-cyber-blue bg-cyber-blue/10' 
+                : 'border-red-500/50 text-red-400 bg-red-500/10'
+            }`}>
+              <div className={`w-2 h-2 rounded-full ${
+                isSendButtonEnabled ? 'bg-cyber-blue animate-pulse' : 'bg-red-400'
+              }`} />
+              {isSendButtonEnabled ? 'NEURAL LINK ACTIVE' : 'CONNECTION LOST'}
+            </div>
+          </div>
         </div>
       </div>
     </main>
