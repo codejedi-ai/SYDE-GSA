@@ -68,26 +68,70 @@
   }
 }
 
-/* Cyberpunk Theme Variables */
+/* Cyberpunk Theme Colors */
 :root {
-  --cyber-blue: #00ffff;
-  --cyber-pink: #ff0080;
-  --cyber-purple: #8b00ff;
-  --cyber-green: #00ff41;
   --cyber-dark: #0a0a0f;
-  --cyber-light: #e0e0e0;
+  --cyber-blue: #00d4ff;
+  --cyber-pink: #ff0080;
+  --cyber-purple: #8b59fb;
+  --cyber-light: #e0e6ed;
+}
+
+.bg-cyber-dark {
+  background-color: var(--cyber-dark);
+}
+
+.text-cyber-blue {
+  color: var(--cyber-blue);
+}
+
+.text-cyber-pink {
+  color: var(--cyber-pink);
+}
+
+.text-cyber-light {
+  color: var(--cyber-light);
+}
+
+.border-cyber-blue {
+  border-color: var(--cyber-blue);
+}
+
+.border-cyber-pink {
+  border-color: var(--cyber-pink);
+}
+
+.bg-cyber-blue\/10 {
+  background-color: rgba(0, 212, 255, 0.1);
+}
+
+.bg-cyber-blue\/20 {
+  background-color: rgba(0, 212, 255, 0.2);
+}
+
+.bg-cyber-blue\/30 {
+  background-color: rgba(0, 212, 255, 0.3);
+}
+
+.bg-cyber-pink\/10 {
+  background-color: rgba(255, 0, 128, 0.1);
+}
+
+.bg-cyber-pink\/20 {
+  background-color: rgba(255, 0, 128, 0.2);
+}
+
+.bg-cyber-pink\/30 {
+  background-color: rgba(255, 0, 128, 0.3);
 }
 
 /* Cyberpunk Fonts */
 .font-cyber {
   font-family: 'Orbitron', monospace;
-  font-weight: 700;
-  letter-spacing: 0.1em;
 }
 
-/* Neon Text Effects */
+/* Neon Effects */
 .neon-text {
-  color: var(--cyber-blue);
   text-shadow: 
     0 0 5px var(--cyber-blue),
     0 0 10px var(--cyber-blue),
@@ -95,28 +139,16 @@
     0 0 20px var(--cyber-blue);
 }
 
-.neon-text-pink {
-  color: var(--cyber-pink);
-  text-shadow: 
-    0 0 5px var(--cyber-pink),
-    0 0 10px var(--cyber-pink),
-    0 0 15px var(--cyber-pink),
-    0 0 20px var(--cyber-pink);
-}
-
-/* Neon Border Effects */
 .neon-border {
-  border-color: var(--cyber-blue);
   box-shadow: 
     0 0 5px var(--cyber-blue),
-    inset 0 0 5px var(--cyber-blue);
+    inset 0 0 5px rgba(0, 212, 255, 0.1);
 }
 
 .neon-border-pink {
-  border-color: var(--cyber-pink);
   box-shadow: 
     0 0 5px var(--cyber-pink),
-    inset 0 0 5px var(--cyber-pink);
+    inset 0 0 5px rgba(255, 0, 128, 0.1);
 }
 
 /* Glitch Effect */
@@ -165,10 +197,10 @@
 
 @keyframes glitch-2 {
   0%, 100% { transform: translate(0); }
-  20% { transform: translate(-2px, 2px); }
+  20% { transform: translate(-2px, -2px); }
   40% { transform: translate(2px, -2px); }
   60% { transform: translate(2px, 2px); }
-  80% { transform: translate(-2px, -2px); }
+  80% { transform: translate(-2px, 2px); }
 }
 
 /* Scan Line Effect */
@@ -176,7 +208,7 @@
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
+  width: 100%;
   height: 2px;
   background: linear-gradient(90deg, transparent, var(--cyber-blue), transparent);
   animation: scan 3s linear infinite;
@@ -187,33 +219,6 @@
 @keyframes scan {
   0% { transform: translateY(-2px); }
   100% { transform: translateY(100vh); }
-}
-
-/* Comic Panel Styling */
-.comic-panel {
-  background: rgba(0, 0, 0, 0.8);
-  border: 2px solid var(--cyber-blue);
-  border-radius: 8px;
-  box-shadow: 
-    0 0 20px rgba(0, 255, 255, 0.3),
-    inset 0 0 20px rgba(0, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-}
-
-.comic-text {
-  font-family: 'Orbitron', monospace;
-  color: var(--cyber-light);
-}
-
-.comic-narration {
-  font-family: 'Orbitron', monospace;
-  color: var(--cyber-blue);
-  font-style: italic;
-  text-align: center;
-  padding: 1rem;
-  background: rgba(0, 255, 255, 0.1);
-  border-radius: 4px;
-  border-left: 4px solid var(--cyber-blue);
 }
 
 /* Message Animation */
@@ -232,15 +237,20 @@
   }
 }
 
-/* Custom Colors */
-.text-cyber-blue { color: var(--cyber-blue); }
-.text-cyber-pink { color: var(--cyber-pink); }
-.text-cyber-light { color: var(--cyber-light); }
-.bg-cyber-dark { background-color: var(--cyber-dark); }
-.bg-cyber-blue { background-color: var(--cyber-blue); }
-.bg-cyber-pink { background-color: var(--cyber-pink); }
-.border-cyber-blue { border-color: var(--cyber-blue); }
-.border-cyber-pink { border-color: var(--cyber-pink); }
+/* Comic Panel Effect */
+.comic-panel {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(255, 0, 128, 0.1) 100%);
+  border: 2px solid var(--cyber-blue);
+  border-radius: 15px;
+  box-shadow: 
+    0 0 20px rgba(0, 212, 255, 0.3),
+    inset 0 0 20px rgba(0, 212, 255, 0.1);
+}
+
+.comic-text {
+  font-family: 'Orbitron', monospace;
+  text-shadow: 0 0 3px rgba(0, 212, 255, 0.5);
+}
 
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
@@ -249,6 +259,7 @@
 
 ::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -260,17 +271,4 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--cyber-pink);
   box-shadow: 0 0 5px var(--cyber-pink);
-}
-
-/* Button Hover Effects */
-.neon-border:hover {
-  box-shadow: 
-    0 0 10px var(--cyber-blue),
-    inset 0 0 10px rgba(0, 255, 255, 0.2);
-}
-
-.neon-border-pink:hover {
-  box-shadow: 
-    0 0 10px var(--cyber-pink),
-    inset 0 0 10px rgba(255, 0, 128, 0.2);
 }
