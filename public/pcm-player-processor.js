@@ -15,7 +15,6 @@ class PCMPlayerProcessor extends AudioWorkletProcessor {
       this._enqueue(int16Samples);
     };
   }
-
   _enqueue(int16Samples) {
     for (let i = 0; i < int16Samples.length; i++) {
       const floatVal = int16Samples[i] / 32768;
@@ -26,7 +25,6 @@ class PCMPlayerProcessor extends AudioWorkletProcessor {
       }
     }
   }
-
   process(inputs, outputs, parameters) {
     const output = outputs[0];
     const framesPerBlock = output[0].length;
@@ -42,5 +40,4 @@ class PCMPlayerProcessor extends AudioWorkletProcessor {
     return true;
   }
 }
-
 registerProcessor('pcm-player-processor', PCMPlayerProcessor);
