@@ -1,14 +1,30 @@
-class PCMProcessor extends AudioWorkletProcessor {
+class PCMRecorderProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
+    this.bufferSize = 1024;
+    this.buffer = new Float32Array(this.bufferSize);
+    this.bufferIndex = 0;
   }
+  
   process(inputs, outputs, parameters) {
-    if (inputs.length > 0 && inputs[0].length > 0) {
-      const inputChannel = inputs[0][0];
-      const inputCopy = new Float32Array(inputChannel);
-      this.port.postMessage(inputCopy);
+    const input = inputs[0];
+    const inputChannel = input[0];
+    
+    if (inputChannel) {
+      for (let i = 0; i < inputChannel.length; i++) {
+        this.buffer[this.bufferIndex] = inputChannel[i];
+        this.bufferIndex++;
+        
+        if (this.bufferIndex >= this.bufferSize) {
+          // Send buffer to main thread
+          this.port.postMessage(this.buffer.slice());
+          this.bufferIndex = 0;
+        }
+      }
     }
+    
     return true;
   }
 }
-registerProcessor("pcm-recorder-processor", PCMProcessor);
+
+registerProcessor('pcm-recorder-processor', PCMRecorderProcessor);

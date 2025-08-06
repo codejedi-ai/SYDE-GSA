@@ -3,150 +3,94 @@
 @tailwind utilities;
 
 :root {
-  --cyber-blue: #00ffff;
-  --cyber-pink: #ff00ff;
-  --cyber-purple: #8b5cf6;
-  --cyber-dark: #0a0a0a;
-  --cyber-light: #e0e0e0;
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
 }
 
-* {
-  box-sizing: border-box;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
 }
 
 body {
-  background-color: var(--cyber-dark);
-  color: var(--cyber-light);
-  font-family: 'Inter', sans-serif;
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
 }
 
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Cyberpunk Theme Styles */
 .font-cyber {
   font-family: 'Orbitron', monospace;
 }
 
-.bg-cyber-dark {
-  background-color: var(--cyber-dark);
+.font-inter {
+  font-family: 'Inter', sans-serif;
 }
 
 .text-cyber-light {
-  color: var(--cyber-light);
-}
-
-.text-cyber-blue {
-  color: var(--cyber-blue);
+  color: #00ffff;
 }
 
 .text-cyber-pink {
-  color: var(--cyber-pink);
-}
-
-.border-cyber-blue {
-  border-color: var(--cyber-blue);
-}
-
-.border-cyber-pink {
-  border-color: var(--cyber-pink);
+  color: #ff00ff;
 }
 
 .bg-cyber-blue {
-  background-color: var(--cyber-blue);
+  background-color: #00ffff;
 }
 
 .bg-cyber-pink {
-  background-color: var(--cyber-pink);
+  background-color: #ff00ff;
+}
+
+.border-cyber-blue {
+  border-color: #00ffff;
+}
+
+.border-cyber-pink {
+  border-color: #ff00ff;
 }
 
 .neon-text {
-  text-shadow: 
-    0 0 5px var(--cyber-blue),
-    0 0 10px var(--cyber-blue),
-    0 0 15px var(--cyber-blue),
-    0 0 20px var(--cyber-blue);
+  text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff, 0 0 15px #00ffff, 0 0 20px #00ffff;
 }
 
 .neon-border {
-  box-shadow: 
-    0 0 5px var(--cyber-blue),
-    inset 0 0 5px rgba(0, 255, 255, 0.1);
+  box-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff, inset 0 0 5px #00ffff;
 }
 
 .neon-border-pink {
-  box-shadow: 
-    0 0 5px var(--cyber-pink),
-    inset 0 0 5px rgba(255, 0, 255, 0.1);
+  box-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff, inset 0 0 5px #ff00ff;
 }
 
-.glitch {
-  position: relative;
-  animation: glitch 2s infinite;
-}
-
-.glitch::before,
-.glitch::after {
-  content: attr(data-text);
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.glitch::before {
-  animation: glitch-1 0.5s infinite;
-  color: var(--cyber-pink);
-  z-index: -1;
-}
-
-.glitch::after {
-  animation: glitch-2 0.5s infinite;
-  color: var(--cyber-blue);
-  z-index: -2;
-}
-
-@keyframes glitch {
-  0%, 100% { transform: translate(0); }
-  20% { transform: translate(-2px, 2px); }
-  40% { transform: translate(-2px, -2px); }
-  60% { transform: translate(2px, 2px); }
-  80% { transform: translate(2px, -2px); }
-}
-
-@keyframes glitch-1 {
-  0%, 100% { transform: translate(0); }
-  20% { transform: translate(2px, -2px); }
-  40% { transform: translate(-2px, 2px); }
-  60% { transform: translate(-2px, -2px); }
-  80% { transform: translate(2px, 2px); }
-}
-
-@keyframes glitch-2 {
-  0%, 100% { transform: translate(0); }
-  20% { transform: translate(-2px, 2px); }
-  40% { transform: translate(2px, -2px); }
-  60% { transform: translate(2px, 2px); }
-  80% { transform: translate(-2px, -2px); }
+.neon-border-red {
+  box-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, inset 0 0 5px #ff0000;
 }
 
 .comic-panel {
-  background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(255, 0, 255, 0.1) 100%);
-  border: 2px solid rgba(0, 255, 255, 0.3);
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-  box-shadow: 
-    0 0 20px rgba(0, 255, 255, 0.2),
-    inset 0 0 20px rgba(0, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #00ffff;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
 }
 
 .comic-text {
   font-family: 'Orbitron', monospace;
-  text-shadow: 0 0 3px currentColor;
-}
-
-.comic-narration {
-  background: rgba(255, 255, 255, 0.1);
-  border-left: 4px solid var(--cyber-blue);
-  font-style: italic;
-  color: var(--cyber-light);
+  font-weight: 400;
 }
 
 .message-enter {
@@ -164,53 +108,73 @@ body {
   }
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
+/* Hover effects */
+.hover\:bg-cyber-pink:hover {
+  background-color: #ff00ff;
+}
+
+.hover\:bg-cyber-blue:hover {
+  background-color: #00ffff;
+}
+
+.hover\:bg-red-700:hover {
+  background-color: #b91c1c;
+}
+
+/* Focus effects */
+.focus\:outline-none:focus {
+  outline: none;
+}
+
+/* Placeholder styles */
+.placeholder-cyber-light::placeholder {
+  color: #00ffff;
+}
+
+.placeholder-opacity-50::placeholder {
+  opacity: 0.5;
+}
+
+/* Disabled styles */
+.disabled\:bg-gray-600:disabled {
+  background-color: #4b5563;
+}
+
+.disabled\:cursor-not-allowed:disabled {
+  cursor: not-allowed;
+}
+
+.disabled\:text-gray-400:disabled {
+  color: #9ca3af;
+}
+
+/* Transition effects */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.duration-300 {
+  transition-duration: 300ms;
+}
+
+/* Scrollbar styling for webkit browsers */
+.overflow-y-auto::-webkit-scrollbar {
   width: 8px;
 }
 
-::-webkit-scrollbar-track {
+.overflow-y-auto::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.3);
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--cyber-blue);
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #00ffff;
   border-radius: 4px;
-  box-shadow: 0 0 5px var(--cyber-blue);
+  box-shadow: 0 0 5px #00ffff;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--cyber-pink);
-  box-shadow: 0 0 5px var(--cyber-pink);
-}
-
-/* Focus and hover effects */
-input:focus {
-  box-shadow: 
-    0 0 10px var(--cyber-blue),
-    inset 0 0 10px rgba(0, 255, 255, 0.1);
-}
-
-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 
-    0 0 15px currentColor,
-    0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-button:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .comic-panel {
-    margin: 1rem;
-    padding: 1rem;
-  }
-  
-  .neon-text {
-    font-size: 2rem;
-  }
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #ff00ff;
+  box-shadow: 0 0 5px #ff00ff;
 }

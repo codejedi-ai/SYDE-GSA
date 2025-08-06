@@ -162,6 +162,50 @@ const ADKStreamingTest: React.FC = () => {
     );
   };
 
+  const stopAudio = (): void => {
+    console.log("Stopping audio conversation...");
+    
+    // Clear the buffer timer
+    if (bufferTimerRef.current) {
+      clearInterval(bufferTimerRef.current);
+      bufferTimerRef.current = null;
+    }
+    
+    // Stop microphone
+    if (micStreamRef.current) {
+      stopMicrophone(micStreamRef.current);
+      micStreamRef.current = null;
+    }
+    
+    // Close audio contexts
+    if (audioRecorderContextRef.current) {
+      audioRecorderContextRef.current.close();
+      audioRecorderContextRef.current = null;
+    }
+    
+    if (audioPlayerContextRef.current) {
+      audioPlayerContextRef.current.close();
+      audioPlayerContextRef.current = null;
+    }
+    
+    // Clear audio nodes
+    audioPlayerNodeRef.current = null;
+    audioRecorderNodeRef.current = null;
+    
+    // Clear audio buffer
+    audioBufferRef.current = [];
+    
+    // Reset audio mode
+    setIsAudioMode(false);
+    
+    // Add a message to indicate audio stopped
+    const stopMessage: Message = { 
+      id: Math.random().toString(36).substring(7), 
+      text: "Audio conversation stopped" 
+    };
+    setMessages(prevMessages => [...prevMessages, stopMessage]);
+  };
+
   // --- useEffect Hook for SSE and cleanup ---
   useEffect(() => {
     const sse_url = `${GOOGLE_ADK_CHAT_AGENT_HOST}/events/${sessionId}?is_audio=${isAudioMode}`;
@@ -264,6 +308,10 @@ const ADKStreamingTest: React.FC = () => {
     startAudio();
   };
 
+  const handleStopAudioClick = (): void => {
+    stopAudio();
+  };
+
   return (
     <main 
       className="min-h-screen bg-cover bg-center bg-no-repeat relative"
@@ -276,7 +324,7 @@ const ADKStreamingTest: React.FC = () => {
       
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4 font-inter">
         <div className="w-full max-w-2xl comic-panel p-6">
-          <h1 className="text-3xl font-bold text-center text-cyber-fa mb-6 font-cyber neon-text">
+          <h1 className="text-3xl font-bold text-center text-cyber-light mb-6 font-cyber neon-text">
             Start a voice conversation
           </h1>
           
@@ -327,8 +375,18 @@ const ADKStreamingTest: React.FC = () => {
                 disabled={isAudioMode}
                 className="px-6 py-3 bg-cyber-pink text-black font-semibold rounded-lg shadow-md hover:bg-cyber-blue transition-all duration-300 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:text-gray-400 neon-border-pink font-cyber"
               >
-                {isAudioMode ? "Audio Started" : "Start Audio"}
+                {isAudioMode ? "Audio Active" : "Start Audio"}
               </button>
+              {isAudioMode && (
+                <button
+                  type="button"
+                  id="stopAudioButton"
+                  onClick={handleStopAudioClick}
+                  className="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition-all duration-300 neon-border-red font-cyber"
+                >
+                  Stop Audio
+                </button>
+              )}
             </div>
           </form>
         </div>
