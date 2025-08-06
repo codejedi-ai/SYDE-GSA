@@ -322,21 +322,23 @@ const ADKStreamingTest: React.FC = () => {
       {/* Dark overlay for better text readability */}
       <div className="absolute inset-0 bg-black bg-opacity-70"></div>
       
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4 font-inter">
-        <div className="w-full max-w-2xl comic-panel p-6">
+      <div className="relative z-10 flex flex-col min-h-screen p-4 font-inter">
+        {/* Full screen chat container */}
+        <div className="flex-1 flex flex-col w-full max-w-none">
           <h1 className="text-3xl font-bold text-center text-cyber-light mb-6 font-cyber neon-text">
             Start a voice conversation
           </h1>
           
+          {/* Messages area - takes up most of the screen */}
           <div
             ref={messagesDivRef}
-            className="h-96 overflow-y-auto border-2 border-cyber-blue rounded-lg p-4 bg-black bg-opacity-50 mb-4 space-y-2 neon-border"
+            className="flex-1 overflow-y-auto border-2 border-cyber-blue rounded-lg p-4 bg-black bg-opacity-30 mb-4 space-y-2 neon-border backdrop-blur-sm"
           >
             {messages.length > 0 ? (
               messages.map((msg, index) => (
                 <div 
                   key={typeof msg === 'string' ? `msg-${index}` : msg.id} 
-                  className="bg-gray-800 bg-opacity-80 text-cyber-light p-3 rounded-lg shadow-sm break-words comic-text message-enter border border-gray-600"
+                  className="bg-gray-800 bg-opacity-60 text-cyber-light p-3 rounded-lg shadow-sm break-words comic-text message-enter border border-gray-600 backdrop-blur-sm"
                 >
                   {typeof msg === 'string' ? msg : msg.text}
                 </div>
@@ -348,6 +350,7 @@ const ADKStreamingTest: React.FC = () => {
             )}
           </div>
           
+          {/* Input form - fixed at bottom */}
           <form onSubmit={handleMessageSubmit} className="flex flex-col md:flex-row gap-4">
             <label htmlFor="message" className="sr-only">Message:</label>
             <input
@@ -357,7 +360,7 @@ const ADKStreamingTest: React.FC = () => {
               value={inputValue}
               onChange={handleInputChange}
               placeholder="Type your message..."
-              className="flex-grow p-3 border-2 border-cyber-blue rounded-lg bg-black bg-opacity-50 text-cyber-light placeholder-cyber-light placeholder-opacity-50 focus:outline-none neon-border transition-all duration-300"
+              className="flex-grow p-3 border-2 border-cyber-blue rounded-lg bg-black bg-opacity-30 text-cyber-light placeholder-cyber-light placeholder-opacity-50 focus:outline-none neon-border transition-all duration-300 backdrop-blur-sm"
             />
             <div className="flex gap-4">
               <button

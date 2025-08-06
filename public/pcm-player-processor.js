@@ -27,13 +27,10 @@ class PCMPlayerProcessor extends AudioWorkletProcessor {
       
       // Add to circular buffer
       for (let i = 0; i < floatData.length; i++) {
-        this.buffer[this.writeIndex] = floatData[i];
-        this.writeIndex = (this.writeIndex + 1) % this.bufferSize;
         if (this.samplesInBuffer < this.bufferSize) {
+          this.buffer[this.writeIndex] = floatData[i];
+          this.writeIndex = (this.writeIndex + 1) % this.bufferSize;
           this.samplesInBuffer++;
-        } else {
-          // Buffer overflow, advance read index
-          this.readIndex = (this.readIndex + 1) % this.bufferSize;
         }
       }
     };
