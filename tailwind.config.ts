@@ -47,12 +47,13 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        'cyber-blue': '#00d4ff',
+        // Cyberpunk colors
+        'cyber-blue': '#00ffff',
         'cyber-pink': '#ff0080',
-        'cyber-purple': '#8b59fb',
-        'cyber-green': '#00ff88',
+        'cyber-purple': '#8b00ff',
+        'cyber-green': '#00ff41',
         'cyber-dark': '#0a0a0f',
-        'cyber-light': '#e0e6ed',
+        'cyber-light': '#e0e0e0',
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -68,10 +69,37 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        glitch: {
+          '0%, 100%': { transform: 'translate(0)' },
+          '20%': { transform: 'translate(-2px, 2px)' },
+          '40%': { transform: 'translate(-2px, -2px)' },
+          '60%': { transform: 'translate(2px, 2px)' },
+          '80%': { transform: 'translate(2px, -2px)' },
+        },
+        scan: {
+          '0%': { transform: 'translateY(-2px)' },
+          '100%': { transform: 'translateY(100vh)' },
+        },
+        messageSlideIn: {
+          from: {
+            opacity: '0',
+            transform: 'translateY(20px)',
+          },
+          to: {
+            opacity: '1',
+            transform: 'translateY(0)',
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        glitch: "glitch 2s infinite",
+        scan: "scan 3s linear infinite",
+        messageSlideIn: "messageSlideIn 0.3s ease-out",
+      },
+      fontFamily: {
+        cyber: ['Orbitron', 'monospace'],
       },
     },
   },

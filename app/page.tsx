@@ -2,13 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Navigation } from '@/components/ui/navigation';
-import type { ChangeEvent, FormEvent, MutableRefObject } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 
 // --- Type Definitions for a strictly typed component ---
 // Define the shape of a single message to be displayed in the UI
 interface Message {
   id: string;
   text: string;
+  role: 'user' | 'assistant';
+  timestamp: Date;
 }
 
 // Define the possible messages received from the server
@@ -25,78 +27,16 @@ interface ClientMessage {
   data: string;
 }
 
-const ADKStreamingTest: React.FC = () => {
-  // --- Audio Worklet Code as strings ---
-  const pcmPlayerProcessorCode = `
-    class PCMPlayerProcessor extends AudioWorkletProcessor {
-      constructor() {
-        super();
-        this.bufferSize = 24000 * 180;
-        this.buffer = new Float32Array(this.bufferSize);
-        this.writeIndex = 0;
-        this.readIndex = 0;
-        this.port.onmessage = (event) => {
-          if (event.data.command === 'endOfAudio') {
-            this.readIndex = this.writeIndex;
-            console.log("endOfAudio received, clearing the buffer.");
-            return;
-          }
-          const int16Samples = new Int16Array(event.data);
-          this._enqueue(int16Samples);
-        };
-      }
-      _enqueue(int16Samples) {
-        for (let i = 0; i < int16Samples.length; i++) {
-          const floatVal = int16Samples[i] / 32768;
-          this.buffer[this.writeIndex] = floatVal;
-          this.writeIndex = (this.writeIndex + 1) % this.bufferSize;
-          if (this.writeIndex === this.readIndex) {
-            this.readIndex = (this.readIndex + 1) % this.bufferSize;
-          }
-        }
-      }
-      process(inputs, outputs, parameters) {
-        const output = outputs[0];
-        const framesPerBlock = output[0].length;
-        for (let frame = 0; frame < framesPerBlock; frame++) {
-          output[0][frame] = this.buffer[this.readIndex];
-          if (output.length > 1) {
-            output[1][frame] = this.buffer[this.readIndex];
-          }
-          if (this.readIndex != this.writeIndex) {
-            this.readIndex = (this.readIndex + 1) % this.bufferSize;
-          }
-        }
-        return true;
-      }
-    }
-    registerProcessor('pcm-player-processor', PCMPlayerProcessor);
-  `;
-
-  const pcmRecorderProcessorCode = `
-    class PCMProcessor extends AudioWorkletProcessor {
-      constructor() {
-        super();
-      }
-      process(inputs, outputs, parameters) {
-        if (inputs.length > 0 && inputs[0].length > 0) {
-          const inputChannel = inputs[0][0];
-          const inputCopy = new Float32Array(inputChannel);
-          this.port.postMessage(inputCopy);
-        }
-        return true;
-      }
-    }
-    registerProcessor("pcm-recorder-processor", PCMProcessor);
-  `;
-
+const VathsalaChat: React.FC = () => {
   // --- State and Refs ---
   const [messages, setMessages] = useState<Array<Message | string>>([]);
   const [inputValue, setInputValue] = useState<string>('');
+  const [isSendButtonEnabled, setIsSendButtonEnabled] = useState<boolean>(false);
   const [isAudioMode, setIsAudioMode] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Using useRef with explicit types for DOM elements and other mutable values
-  const messagesDivRef = useRef<HTMLDivElement | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const currentMessageIdRef = useRef<string | null>(null);
   const audioPlayerNodeRef = useRef<AudioWorkletNode | null>(null);
@@ -110,8 +50,13 @@ const ADKStreamingTest: React.FC = () => {
   // A stable, unique session ID for the component's lifetime
   const sessionId = useRef<string>(Math.random().toString().substring(10)).current;
 
-  // Hardcoded host and port as requested
-  const GOOGLE_ADK_CHAT_AGENT_HOST: string = process.env.NEXT_PUBLIC_GOOGLE_ADK_CHAT_AGENT_HOST || "http://localhost:8000";
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   // --- Helper Functions with explicit types ---
   const convertFloat32ToPCM = (inputData: Float32Array): ArrayBuffer => {
@@ -124,9 +69,7 @@ const ADKStreamingTest: React.FC = () => {
 
   const startAudioPlayerWorklet = async (): Promise<[AudioWorkletNode, AudioContext]> => {
     const audioContext = new AudioContext({ sampleRate: 24000 });
-    const blob = new Blob([pcmPlayerProcessorCode], { type: 'application/javascript' });
-    const workletURL = URL.createObjectURL(blob);
-    await audioContext.audioWorklet.addModule(workletURL);
+    await audioContext.audioWorklet.addModule('/pcm-player-processor.js');
     const audioPlayerNode = new AudioWorkletNode(audioContext, 'pcm-player-processor');
     audioPlayerNode.connect(audioContext.destination);
     return [audioPlayerNode, audioContext];
@@ -135,9 +78,7 @@ const ADKStreamingTest: React.FC = () => {
   const startAudioRecorderWorklet = async (audioRecorderHandler: (pcmData: ArrayBuffer) => void): Promise<[AudioWorkletNode, AudioContext, MediaStream]> => {
     const audioRecorderContext = new AudioContext({ sampleRate: 16000 });
     console.log("AudioContext sample rate:", audioRecorderContext.sampleRate);
-    const blob = new Blob([pcmRecorderProcessorCode], { type: 'application/javascript' });
-    const workletURL = URL.createObjectURL(blob);
-    await audioRecorderContext.audioWorklet.addModule(workletURL);
+    await audioRecorderContext.audioWorklet.addModule('/pcm-recorder-processor.js');
     const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 } });
     const source = audioRecorderContext.createMediaStreamSource(stream);
     const audioRecorderNode = new AudioWorkletNode(audioRecorderContext, "pcm-recorder-processor");
@@ -176,7 +117,8 @@ const ADKStreamingTest: React.FC = () => {
 
   const sendMessage = async (message: ClientMessage): Promise<void> => {
     try {
-      const send_url = `${GOOGLE_ADK_CHAT_AGENT_HOST}/send/${sessionId}`;
+      // Use the local API route to send messages
+      const send_url = `/api/chat/send/${sessionId}`;
       const response = await fetch(send_url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -232,7 +174,8 @@ const ADKStreamingTest: React.FC = () => {
 
   // --- useEffect Hook for SSE and cleanup ---
   useEffect(() => {
-    const sse_url = `${GOOGLE_ADK_CHAT_AGENT_HOST}/events/${sessionId}?is_audio=${isAudioMode}`;
+    // Use the local API route for the event stream
+    const sse_url = `/api/chat/events/${sessionId}?is_audio=${isAudioMode}`;
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       console.log("Old SSE connection closed for reconnect.");
@@ -241,18 +184,21 @@ const ADKStreamingTest: React.FC = () => {
 
     eventSourceRef.current.onopen = function () {
       console.log("SSE connection opened.");
+      setMessages(prev => [...prev, "Connection opened"]);
+      setIsSendButtonEnabled(true); // This will now be called, enabling the button
     };
 
     eventSourceRef.current.onmessage = function (event: MessageEvent) {
       const message_from_server: ServerMessage = JSON.parse(event.data);
       console.log("[AGENT TO CLIENT] ", message_from_server);
 
-      if (message_from_server.turn_complete && message_from_server.turn_complete === true) {
+      if (message_from_server.turn_complete) {
         currentMessageIdRef.current = null;
+        setIsLoading(false);
         return;
       }
 
-      if (message_from_server.interrupted && message_from_server.interrupted === true) {
+      if (message_from_server.interrupted) {
         if (audioPlayerNodeRef.current) {
           audioPlayerNodeRef.current.port.postMessage({ command: "endOfAudio" });
         }
@@ -265,8 +211,15 @@ const ADKStreamingTest: React.FC = () => {
 
       if (message_from_server.mime_type === "text/plain" && message_from_server.data) {
         if (currentMessageIdRef.current == null) {
-          currentMessageIdRef.current = Math.random().toString(36).substring(7);
-          setMessages(prevMessages => [...prevMessages, { id: currentMessageIdRef.current, text: message_from_server.data } as Message]);
+          const newId = Math.random().toString(36).substring(7);
+          currentMessageIdRef.current = newId;
+          const newMessage: Message = { 
+            id: newId, 
+            text: message_from_server.data,
+            role: 'assistant',
+            timestamp: new Date()
+          };
+          setMessages(prevMessages => [...prevMessages, newMessage]);
         } else {
           setMessages(prevMessages =>
             prevMessages.map(msg =>
@@ -276,21 +229,14 @@ const ADKStreamingTest: React.FC = () => {
             )
           );
         }
-        if (messagesDivRef.current) {
-          messagesDivRef.current.scrollTop = messagesDivRef.current.scrollHeight;
-        }
       }
     };
 
     eventSourceRef.current.onerror = function (event) {
       console.log("SSE connection error or closed.");
+      setIsSendButtonEnabled(false);
+      setMessages(prevMessages => [...prevMessages, "Connection closed"]);
       eventSourceRef.current?.close();
-      setTimeout(function () {
-        console.log("Reconnecting...");
-        if (eventSourceRef.current) {
-          eventSourceRef.current = new EventSource(sse_url);
-        }
-      }, 5000);
     };
 
     return () => {
@@ -305,7 +251,7 @@ const ADKStreamingTest: React.FC = () => {
         stopMicrophone(micStreamRef.current);
       }
     };
-  }, [isAudioMode]);
+  }, [isAudioMode, sessionId]);
 
   // --- Event Handlers with explicit types ---
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
@@ -314,12 +260,18 @@ const ADKStreamingTest: React.FC = () => {
 
   const handleMessageSubmit = (e: FormEvent): void => {
     e.preventDefault();
-    if (inputValue.trim()) {
-      const newMessage: Message = { id: Math.random().toString(36).substring(7), text: `> ${inputValue}` };
+    if (inputValue.trim() && isSendButtonEnabled) {
+      const newMessage: Message = { 
+        id: Math.random().toString(36).substring(7), 
+        text: inputValue,
+        role: 'user',
+        timestamp: new Date()
+      };
       setMessages(prevMessages => [...prevMessages, newMessage]);
       sendMessage({ mime_type: "text/plain", data: inputValue });
       console.log("[CLIENT TO AGENT] " + inputValue);
       setInputValue('');
+      setIsLoading(true);
     }
   };
 
@@ -329,82 +281,107 @@ const ADKStreamingTest: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen bg-cyber-dark relative overflow-hidden">
-      {/* Background Image with Dark Overlay */}
+    <div className="min-h-screen bg-cyber-dark relative overflow-hidden">
       <div 
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: 'url(/background.png)' }}
       />
       <div className="fixed inset-0 bg-black/70" />
-
-      {/* Scan Line Effect */}
       <div className="scan-line" />
-
-      {/* Navigation */}
       <Navigation />
-
-      {/* Main Content - Full Screen Chat */}
       <div className="relative z-10 flex flex-col h-screen pt-16">
-        {/* Messages Container - Takes most of the screen */}
-        <div className="flex-1 p-4">
-          <div
-            ref={messagesDivRef}
-            className="h-full overflow-y-auto border-2 border-cyber-blue/30 rounded-lg p-6 bg-black/40 backdrop-blur-sm space-y-3"
-          >
-            {messages.length > 0 ? (
-              messages.map((msg, index) => (
-                <div 
-                  key={typeof msg === 'string' ? `msg-${index}` : msg.id} 
-                  className="message-enter comic-text bg-cyber-blue/10 border border-cyber-blue/30 p-3 rounded-lg shadow-lg break-words text-cyber-light font-mono"
-                >
-                  {typeof msg === 'string' ? msg : msg.text}
+        <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4">
+          <div className="flex-1 mb-4 bg-black/40 border-cyber-blue neon-border backdrop-blur-sm rounded-lg overflow-hidden flex flex-col">
+            <div className="flex-1 p-6 overflow-y-auto space-y-4 pr-2">
+              {messages.length === 0 && (
+                <div className="text-center text-cyber-light font-mono py-8">
+                  <p className="text-lg mb-2">Welcome to the Neural Interface</p>
+                  <p className="text-sm opacity-70">Begin transmission to communicate with Vathsala</p>
                 </div>
-              ))
-            ) : (
-              <div className="text-cyber-light/60 text-center italic font-cyber">
-                Neural link establishing... Messages will appear here
+              )}
+              {messages.map((msg, index) => (
+                typeof msg === 'string' ? (
+                  <div key={`sys-${index}`} className="text-center text-cyber-light/50 text-xs font-mono italic">
+                    {msg}
+                  </div>
+                ) : (
+                  <div
+                    key={msg.id}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} message-enter`}
+                  >
+                    <div
+                      className={`max-w-[80%] p-4 rounded-lg font-mono ${
+                        msg.role === 'user'
+                          ? 'bg-cyber-blue/20 border border-cyber-blue text-cyber-light neon-border'
+                          : 'bg-cyber-pink/20 border border-cyber-pink text-white neon-border-pink'
+                      }`}
+                    >
+                      <div className="text-sm mb-1 opacity-70">
+                        {msg.role === 'user' ? 'USER' : 'VATHSALA'}
+                      </div>
+                      <div className="whitespace-pre-wrap">{msg.text}</div>
+                      <div className="text-xs mt-2 opacity-50">
+                        {msg.timestamp.toLocaleTimeString()}
+                      </div>
+                    </div>
+                  </div>
+                )
+              ))}
+              {isLoading && (
+                <div className="flex justify-start message-enter">
+                  <div className="bg-cyber-pink/20 border border-cyber-pink text-white neon-border-pink p-4 rounded-lg font-mono">
+                    <div className="text-sm mb-1 opacity-70">VATHSALA</div>
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-pulse">Processing neural patterns...</div>
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-cyber-pink rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <div className="w-2 h-2 bg-cyber-pink rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <div className="w-2 h-2 bg-cyber-pink rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+          <div className="pb-6">
+            <form onSubmit={handleMessageSubmit} className="flex flex-col md:flex-row gap-4">
+              <label htmlFor="message" className="sr-only">Message:</label>
+              <input
+                type="text"
+                id="message"
+                name="message"
+                value={inputValue}
+                onChange={handleInputChange}
+                placeholder="Enter neural transmission..."
+                className="flex-grow p-4 bg-black/60 border-2 border-cyber-blue/50 rounded-lg text-cyber-light font-mono placeholder-cyber-light/50 focus:outline-none focus:border-cyber-blue focus:shadow-lg focus:shadow-cyber-blue/20 transition-all duration-300"
+              />
+              <div className="flex gap-4">
+                <button
+                  type="submit"
+                  id="sendButton"
+                  disabled={!isSendButtonEnabled || !inputValue.trim() || isAudioMode}
+                  className="px-8 py-4 bg-cyber-blue/20 border-2 border-cyber-blue text-cyber-blue font-cyber font-bold rounded-lg neon-border hover:bg-cyber-blue/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-cyber-blue/20"
+                >
+                  TRANSMIT
+                </button>
+                <button
+                  type="button"
+                  id="startAudioButton"
+                  onClick={handleStartAudioClick}
+                  disabled={isAudioMode}
+                  className="px-8 py-4 bg-cyber-pink/20 border-2 border-cyber-pink text-cyber-pink font-cyber font-bold rounded-lg neon-border-pink hover:bg-cyber-pink/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-cyber-pink/20"
+                >
+                  {isAudioMode ? "VOICE ACTIVE" : "VOICE MODE"}
+                </button>
               </div>
-            )}
+            </form>
           </div>
         </div>
-
-        {/* Input Form - Fixed at bottom */}
-        <div className="p-4 bg-black/20 backdrop-blur-sm border-t border-cyber-blue/30">
-          <form onSubmit={handleMessageSubmit} className="flex flex-col md:flex-row gap-4 max-w-6xl mx-auto">
-            <label htmlFor="message" className="sr-only">Message:</label>
-            <input
-              type="text"
-              id="message"
-              name="message"
-              value={inputValue}
-              onChange={handleInputChange}
-              placeholder="Enter neural transmission..."
-              className="flex-grow p-4 bg-black/60 border-2 border-cyber-blue/50 rounded-lg text-cyber-light font-cyber placeholder-cyber-light/50 focus:outline-none focus:border-cyber-blue focus:shadow-lg focus:shadow-cyber-blue/20 transition-all duration-300"
-            />
-            <div className="flex gap-4">
-              <button
-                type="submit"
-                id="sendButton"
-                disabled={!inputValue.trim() || isAudioMode}
-                className="px-8 py-4 bg-cyber-blue/20 border-2 border-cyber-blue text-cyber-blue font-cyber font-bold rounded-lg neon-border hover:bg-cyber-blue/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-cyber-blue/20"
-              >
-                TRANSMIT
-              </button>
-              <button
-                type="button"
-                id="startAudioButton"
-                onClick={handleStartAudioClick}
-                disabled={isAudioMode}
-                className="px-8 py-4 bg-cyber-pink/20 border-2 border-cyber-pink text-cyber-pink font-cyber font-bold rounded-lg neon-border-pink hover:bg-cyber-pink/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-cyber-pink/20"
-              >
-                {isAudioMode ? "VOICE ACTIVE" : "VOICE MODE"}
-              </button>
-            </div>
-          </form>
-        </div>
       </div>
-    </main>
+    </div>
   );
 };
 
-export default ADKStreamingTest;
+export default VathsalaChat;
