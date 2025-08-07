@@ -33,7 +33,6 @@ const VathsalaChat: React.FC = () => {
   const [messages, setMessages] = useState<Array<Message | string>>([]);
   const [isSendButtonEnabled, setIsSendButtonEnabled] = useState<boolean>(false);
   const [isAudioMode, setIsAudioMode] = useState<boolean>(false);
-  const [isRecording, setIsRecording] = useState<boolean>(false);
 
   // Using useRef with explicit types for DOM elements and other mutable values
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -84,7 +83,8 @@ const VathsalaChat: React.FC = () => {
     const audioRecorderNode = new AudioWorkletNode(audioRecorderContext, "pcm-recorder-processor");
     source.connect(audioRecorderNode);
     audioRecorderNode.port.onmessage = (event: MessageEvent<Float32Array>) => {
-      audioRecorderHandler(event.data);
+      const pcmData = convertFloat32ToPCM(event.data);
+      audioRecorderHandler(pcmData);
     };
     return [audioRecorderNode, audioRecorderContext, stream];
   };
@@ -119,7 +119,8 @@ const VathsalaChat: React.FC = () => {
 
   const sendMessage = async (message: ClientMessage): Promise<void> => {
     try {
-      const send_url = `/api/chat/send/${sessionId}`;
+      const GOOGLE_ADK_CHAT_AGENT_HOST = process.env.NEXT_PUBLIC_GOOGLE_ADK_CHAT_AGENT_HOST || "http://localhost:8000";
+      const send_url = `${GOOGLE_ADK_CHAT_AGENT_HOST}/send/${sessionId}`;
       const response = await fetch(send_url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -133,34 +134,50 @@ const VathsalaChat: React.FC = () => {
     }
   };
 
+  // Send buffered audio data every 0.2 seconds (verbatim from JS)
   const sendBufferedAudio = (): void => {
-    if (audioBufferRef.current.length === 0 || !isRecording) {
+    if (audioBufferRef.current.length === 0) {
       return;
     }
-    const totalLength = audioBufferRef.current.reduce((sum, chunk) => sum + chunk.length, 0);
+    
+    // Calculate total length
+    let totalLength = 0;
+    for (const chunk of audioBufferRef.current) {
+      totalLength += chunk.length;
+    }
+    
+    // Combine all chunks into a single buffer
     const combinedBuffer = new Uint8Array(totalLength);
     let offset = 0;
     for (const chunk of audioBufferRef.current) {
       combinedBuffer.set(chunk, offset);
       offset += chunk.length;
     }
+    
+    // Send the combined audio data
     sendMessage({
       mime_type: "audio/pcm",
       data: arrayBufferToBase64(combinedBuffer.buffer),
     });
     console.log("[CLIENT TO AGENT] sent %s bytes", combinedBuffer.byteLength);
+    
+    // Clear the buffer
     audioBufferRef.current = [];
   };
 
-  const audioRecorderHandler = (pcmData: Float32Array): void => {
-    if (!isRecording) return;
-    const pcm16Data = convertFloat32ToPCM(pcmData);
-    audioBufferRef.current.push(new Uint8Array(pcm16Data));
+  // Audio recorder handler (verbatim from JS)
+  const audioRecorderHandler = (pcmData: ArrayBuffer): void => {
+    // Add audio data to buffer
+    audioBufferRef.current.push(new Uint8Array(pcmData));
+    
+    // Start timer if not already running
+    if (!bufferTimerRef.current) {
+      bufferTimerRef.current = setInterval(sendBufferedAudio, 200); // 0.2 seconds
+    }
   };
 
   const startAudio = (): void => {
     setIsAudioMode(true);
-    setIsRecording(true);
     startAudioPlayerWorklet().then(([node, ctx]) => {
       audioPlayerNodeRef.current = node;
       audioPlayerContextRef.current = ctx;
@@ -174,14 +191,22 @@ const VathsalaChat: React.FC = () => {
     );
   };
 
+  // Stop audio recording and cleanup (verbatim from JS)
   const stopAudio = (): void => {
     setIsAudioMode(false);
-    setIsRecording(false);
-    stopMicrophone();
+    
     if (bufferTimerRef.current) {
       clearInterval(bufferTimerRef.current);
       bufferTimerRef.current = null;
     }
+    
+    // Send any remaining buffered audio
+    if (audioBufferRef.current.length > 0) {
+      sendBufferedAudio();
+    }
+    
+    stopMicrophone();
+    
     if (audioPlayerContextRef.current && audioPlayerContextRef.current.state !== 'closed') {
       audioPlayerContextRef.current.close();
       audioPlayerContextRef.current = null;
@@ -192,77 +217,90 @@ const VathsalaChat: React.FC = () => {
     }
   };
 
-  // --- useEffect Hook for SSE and cleanup ---
+  // SSE (Server-Sent Events) handling - verbatim from JS
   useEffect(() => {
-    if (!isAudioMode) {
+    const connectSSE = () => {
+      const GOOGLE_ADK_CHAT_AGENT_HOST = process.env.NEXT_PUBLIC_GOOGLE_ADK_CHAT_AGENT_HOST || "http://localhost:8000";
+      const sse_url = `${GOOGLE_ADK_CHAT_AGENT_HOST}/events/${sessionId}?is_audio=${isAudioMode}`;
+      
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
+      }
+      
+      // Connect to SSE endpoint
+      eventSourceRef.current = new EventSource(sse_url);
+
+      // Handle connection open
+      eventSourceRef.current.onopen = function () {
+        console.log("SSE connection opened.");
+        setMessages(["Connection opened"]);
+        setIsSendButtonEnabled(true);
+      };
+
+      // Handle incoming messages
+      eventSourceRef.current.onmessage = function (event: MessageEvent) {
+        const message_from_server: ServerMessage = JSON.parse(event.data);
+        console.log("[AGENT TO CLIENT] ", message_from_server);
+
+        // Check if the turn is complete
+        if (message_from_server.turn_complete && message_from_server.turn_complete === true) {
+          currentMessageIdRef.current = null;
+          return;
+        }
+
+        // Check for interrupt message
+        if (message_from_server.interrupted && message_from_server.interrupted === true) {
+          // Stop audio playback if it's playing
+          if (audioPlayerNodeRef.current) {
+            audioPlayerNodeRef.current.port.postMessage({ command: "endOfAudio" });
+          }
+          return;
+        }
+
+        // If it's audio, play it
+        if (message_from_server.mime_type === "audio/pcm" && audioPlayerNodeRef.current && message_from_server.data) {
+          audioPlayerNodeRef.current.port.postMessage(base64ToArray(message_from_server.data));
+        }
+
+        // If it's a text, print it
+        if (message_from_server.mime_type === "text/plain" && message_from_server.data) {
+          // add a new message for a new turn
+          if (currentMessageIdRef.current == null) {
+            currentMessageIdRef.current = Math.random().toString(36).substring(7);
+            const newMessage: Message = { 
+              id: currentMessageIdRef.current, 
+              text: message_from_server.data,
+              role: 'assistant',
+              timestamp: new Date()
+            };
+            setMessages(prevMessages => [...prevMessages, newMessage]);
+          } else {
+            // Add message text to the existing message element
+            setMessages(prevMessages =>
+              prevMessages.map(msg =>
+                typeof msg !== 'string' && msg.id === currentMessageIdRef.current
+                  ? { ...msg, text: msg.text + message_from_server.data }
+                  : msg
+              )
+            );
+          }
+        }
+      };
+
+      // Handle connection close
+      eventSourceRef.current.onerror = function () {
+        console.log("SSE connection error or closed.");
         setIsSendButtonEnabled(false);
-      }
-      return;
-    }
-
-    const sse_url = `/api/chat/events/${sessionId}?is_audio=${isAudioMode}`;
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-    }
-    eventSourceRef.current = new EventSource(sse_url);
-
-    eventSourceRef.current.onopen = function () {
-      console.log("SSE connection opened.");
-      setMessages(prev => ["Connection opened"]);
-      setIsSendButtonEnabled(true);
+        setMessages(prevMessages => [...prevMessages, "Connection closed"]);
+        eventSourceRef.current?.close();
+        setTimeout(function () {
+          console.log("Reconnecting...");
+          connectSSE();
+        }, 5000);
+      };
     };
 
-    eventSourceRef.current.onmessage = function (event: MessageEvent) {
-      const message_from_server: ServerMessage = JSON.parse(event.data);
-      console.log("[AGENT TO CLIENT] ", message_from_server);
-
-      if (message_from_server.turn_complete) {
-        currentMessageIdRef.current = null;
-        return;
-      }
-
-      if (message_from_server.interrupted) {
-        if (audioPlayerNodeRef.current) {
-          audioPlayerNodeRef.current.port.postMessage({ command: "endOfAudio" });
-        }
-        return;
-      }
-
-      if (message_from_server.mime_type === "audio/pcm" && audioPlayerNodeRef.current && message_from_server.data) {
-        audioPlayerNodeRef.current.port.postMessage(base64ToArray(message_from_server.data));
-      }
-
-      if (message_from_server.mime_type === "text/plain" && message_from_server.data) {
-        if (currentMessageIdRef.current == null) {
-          const newId = Math.random().toString(36).substring(7);
-          currentMessageIdRef.current = newId;
-          const newMessage: Message = { 
-            id: newId, 
-            text: message_from_server.data,
-            role: 'assistant',
-            timestamp: new Date()
-          };
-          setMessages(prevMessages => [...prevMessages, newMessage]);
-        } else {
-          setMessages(prevMessages =>
-            prevMessages.map(msg =>
-              typeof msg !== 'string' && msg.id === currentMessageIdRef.current
-                ? { ...msg, text: msg.text + message_from_server.data }
-                : msg
-            )
-          );
-        }
-      }
-    };
-
-    eventSourceRef.current.onerror = function (event) {
-      console.log("SSE connection error or closed.");
-      setIsSendButtonEnabled(false);
-      setMessages(prevMessages => [...prevMessages, "Connection closed"]);
-      eventSourceRef.current?.close();
-    };
+    connectSSE();
 
     return () => {
       if (eventSourceRef.current) {
@@ -271,27 +309,16 @@ const VathsalaChat: React.FC = () => {
     };
   }, [isAudioMode, sessionId]);
 
-  useEffect(() => {
-    if (isRecording) {
-      bufferTimerRef.current = setInterval(sendBufferedAudio, 200);
-    } else {
-      if (bufferTimerRef.current) {
-        clearInterval(bufferTimerRef.current);
-        bufferTimerRef.current = null;
-      }
-    }
-    return () => {
-      if (bufferTimerRef.current) {
-        clearInterval(bufferTimerRef.current);
-      }
-    };
-  }, [isRecording]);
-
+  // Start the audio only when the user clicked the button (verbatim from JS)
   const handleVoiceToggle = () => {
     if (isAudioMode) {
       stopAudio();
     } else {
       startAudio();
+      // Close current connection and reconnect with audio mode (following JS pattern)
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
     }
   };
 
