@@ -1,13 +1,13 @@
 class PCMPlayerProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
-    this.bufferSize = 24000 * 180; // Buffer for 3 minutes of audio
+    this.bufferSize = 24000 * 180; // Buffer for up to 3 minutes of audio
     this.buffer = new Float32Array(this.bufferSize);
     this.writeIndex = 0;
     this.readIndex = 0;
     this.port.onmessage = (event) => {
       if (event.data.command === 'endOfAudio') {
-        // Fast-forward read index to write index to stop playback
+        // When interrupted, clear the buffer by setting read index to write index
         this.readIndex = this.writeIndex;
         console.log("endOfAudio received, clearing the buffer.");
         return;
@@ -24,7 +24,7 @@ class PCMPlayerProcessor extends AudioWorkletProcessor {
       const floatVal = int16Samples[i] / 32768;
       this.buffer[this.writeIndex] = floatVal;
       this.writeIndex = (this.writeIndex + 1) % this.bufferSize;
-      // If buffer overflows, move read index to prevent reading old data
+      // If buffer overflows, move readIndex forward to not read old data
       if (this.writeIndex === this.readIndex) {
         this.readIndex = (this.readIndex + 1) % this.bufferSize;
       }
@@ -33,19 +33,21 @@ class PCMPlayerProcessor extends AudioWorkletProcessor {
 
   process(inputs, outputs, parameters) {
     const output = outputs[0];
-    const channelCount = output.length;
     const framesPerBlock = output[0].length;
 
     for (let frame = 0; frame < framesPerBlock; frame++) {
-      const value = this.buffer[this.readIndex];
-      for (let channel = 0; channel < channelCount; channel++) {
-        output[channel][frame] = value;
+      // Provide audio data from the buffer
+      output[0][frame] = this.buffer[this.readIndex];
+      // If stereo, copy to the second channel
+      if (output.length > 1) {
+        output[1][frame] = this.buffer[this.readIndex];
       }
-      if (this.readIndex !== this.writeIndex) {
+      // Move read index if there is data to be read
+      if (this.readIndex != this.writeIndex) {
         this.readIndex = (this.readIndex + 1) % this.bufferSize;
       }
     }
-    return true; // Keep processor alive
+    return true; // Keep the processor alive
   }
 }
 

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Navigation } from '@/components/ui/navigation';
-import type { ChangeEvent, FormEvent } from 'react';
+import type { FormEvent } from 'react';
+import { Mic, MicOff } from 'lucide-react';
 
 // --- Type Definitions for a strictly typed component ---
 // Define the shape of a single message to be displayed in the UI
@@ -30,10 +31,9 @@ interface ClientMessage {
 const VathsalaChat: React.FC = () => {
   // --- State and Refs ---
   const [messages, setMessages] = useState<Array<Message | string>>([]);
-  const [inputValue, setInputValue] = useState<string>('');
   const [isSendButtonEnabled, setIsSendButtonEnabled] = useState<boolean>(false);
   const [isAudioMode, setIsAudioMode] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState<boolean>(false);
 
   // Using useRef with explicit types for DOM elements and other mutable values
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -84,15 +84,17 @@ const VathsalaChat: React.FC = () => {
     const audioRecorderNode = new AudioWorkletNode(audioRecorderContext, "pcm-recorder-processor");
     source.connect(audioRecorderNode);
     audioRecorderNode.port.onmessage = (event: MessageEvent<Float32Array>) => {
-      const pcmData = convertFloat32ToPCM(event.data);
-      audioRecorderHandler(pcmData);
+      audioRecorderHandler(event.data);
     };
     return [audioRecorderNode, audioRecorderContext, stream];
   };
 
-  const stopMicrophone = (micStream: MediaStream): void => {
-    micStream.getTracks().forEach((track) => track.stop());
-    console.log("stopMicrophone(): Microphone stopped.");
+  const stopMicrophone = (): void => {
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach((track) => track.stop());
+      micStreamRef.current = null;
+      console.log("stopMicrophone(): Microphone stopped.");
+    }
   };
 
   const base64ToArray = (base64: string): ArrayBuffer => {
@@ -117,7 +119,6 @@ const VathsalaChat: React.FC = () => {
 
   const sendMessage = async (message: ClientMessage): Promise<void> => {
     try {
-      // Use the local API route to send messages
       const send_url = `/api/chat/send/${sessionId}`;
       const response = await fetch(send_url, {
         method: 'POST',
@@ -133,7 +134,7 @@ const VathsalaChat: React.FC = () => {
   };
 
   const sendBufferedAudio = (): void => {
-    if (audioBufferRef.current.length === 0) {
+    if (audioBufferRef.current.length === 0 || !isRecording) {
       return;
     }
     const totalLength = audioBufferRef.current.reduce((sum, chunk) => sum + chunk.length, 0);
@@ -151,14 +152,15 @@ const VathsalaChat: React.FC = () => {
     audioBufferRef.current = [];
   };
 
-  const audioRecorderHandler = (pcmData: ArrayBuffer): void => {
-    audioBufferRef.current.push(new Uint8Array(pcmData));
-    if (!bufferTimerRef.current) {
-      bufferTimerRef.current = setInterval(sendBufferedAudio, 200);
-    }
+  const audioRecorderHandler = (pcmData: Float32Array): void => {
+    if (!isRecording) return;
+    const pcm16Data = convertFloat32ToPCM(pcmData);
+    audioBufferRef.current.push(new Uint8Array(pcm16Data));
   };
 
   const startAudio = (): void => {
+    setIsAudioMode(true);
+    setIsRecording(true);
     startAudioPlayerWorklet().then(([node, ctx]) => {
       audioPlayerNodeRef.current = node;
       audioPlayerContextRef.current = ctx;
@@ -172,20 +174,44 @@ const VathsalaChat: React.FC = () => {
     );
   };
 
+  const stopAudio = (): void => {
+    setIsAudioMode(false);
+    setIsRecording(false);
+    stopMicrophone();
+    if (bufferTimerRef.current) {
+      clearInterval(bufferTimerRef.current);
+      bufferTimerRef.current = null;
+    }
+    if (audioPlayerContextRef.current && audioPlayerContextRef.current.state !== 'closed') {
+      audioPlayerContextRef.current.close();
+      audioPlayerContextRef.current = null;
+    }
+    if (audioRecorderContextRef.current && audioRecorderContextRef.current.state !== 'closed') {
+      audioRecorderContextRef.current.close();
+      audioRecorderContextRef.current = null;
+    }
+  };
+
   // --- useEffect Hook for SSE and cleanup ---
   useEffect(() => {
-    // Use the local API route for the event stream
+    if (!isAudioMode) {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        setIsSendButtonEnabled(false);
+      }
+      return;
+    }
+
     const sse_url = `/api/chat/events/${sessionId}?is_audio=${isAudioMode}`;
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
-      console.log("Old SSE connection closed for reconnect.");
     }
     eventSourceRef.current = new EventSource(sse_url);
 
     eventSourceRef.current.onopen = function () {
       console.log("SSE connection opened.");
-      setMessages(prev => [...prev, "Connection opened"]);
-      setIsSendButtonEnabled(true); // This will now be called, enabling the button
+      setMessages(prev => ["Connection opened"]);
+      setIsSendButtonEnabled(true);
     };
 
     eventSourceRef.current.onmessage = function (event: MessageEvent) {
@@ -194,7 +220,6 @@ const VathsalaChat: React.FC = () => {
 
       if (message_from_server.turn_complete) {
         currentMessageIdRef.current = null;
-        setIsLoading(false);
         return;
       }
 
@@ -240,44 +265,34 @@ const VathsalaChat: React.FC = () => {
     };
 
     return () => {
-      console.log("Component unmounting or isAudioMode changed. Cleaning up SSE.");
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
-      }
-      if (bufferTimerRef.current) {
-        clearInterval(bufferTimerRef.current);
-      }
-      if (micStreamRef.current) {
-        stopMicrophone(micStreamRef.current);
       }
     };
   }, [isAudioMode, sessionId]);
 
-  // --- Event Handlers with explicit types ---
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
-    setInputValue(e.target.value);
-  };
-
-  const handleMessageSubmit = (e: FormEvent): void => {
-    e.preventDefault();
-    if (inputValue.trim() && isSendButtonEnabled) {
-      const newMessage: Message = { 
-        id: Math.random().toString(36).substring(7), 
-        text: inputValue,
-        role: 'user',
-        timestamp: new Date()
-      };
-      setMessages(prevMessages => [...prevMessages, newMessage]);
-      sendMessage({ mime_type: "text/plain", data: inputValue });
-      console.log("[CLIENT TO AGENT] " + inputValue);
-      setInputValue('');
-      setIsLoading(true);
+  useEffect(() => {
+    if (isRecording) {
+      bufferTimerRef.current = setInterval(sendBufferedAudio, 200);
+    } else {
+      if (bufferTimerRef.current) {
+        clearInterval(bufferTimerRef.current);
+        bufferTimerRef.current = null;
+      }
     }
-  };
+    return () => {
+      if (bufferTimerRef.current) {
+        clearInterval(bufferTimerRef.current);
+      }
+    };
+  }, [isRecording]);
 
-  const handleStartAudioClick = (): void => {
-    setIsAudioMode(true);
-    startAudio();
+  const handleVoiceToggle = () => {
+    if (isAudioMode) {
+      stopAudio();
+    } else {
+      startAudio();
+    }
   };
 
   return (
@@ -294,9 +309,9 @@ const VathsalaChat: React.FC = () => {
           <div className="flex-1 mb-4 bg-black/40 border-cyber-blue neon-border backdrop-blur-sm rounded-lg overflow-hidden flex flex-col">
             <div className="flex-1 p-6 overflow-y-auto space-y-4 pr-2">
               {messages.length === 0 && (
-                <div className="text-center text-cyber-light font-mono py-8">
+                <div className="text-center text-cyber-light font-mono py-8 h-full flex flex-col justify-center items-center">
                   <p className="text-lg mb-2">Welcome to the Neural Interface</p>
-                  <p className="text-sm opacity-70">Begin transmission to communicate with Vathsala</p>
+                  <p className="text-sm opacity-70">Press "CONNECT VOICE" to communicate with Vathsala</p>
                 </div>
               )}
               {messages.map((msg, index) => (
@@ -327,56 +342,24 @@ const VathsalaChat: React.FC = () => {
                   </div>
                 )
               ))}
-              {isLoading && (
-                <div className="flex justify-start message-enter">
-                  <div className="bg-cyber-pink/20 border border-cyber-pink text-white neon-border-pink p-4 rounded-lg font-mono">
-                    <div className="text-sm mb-1 opacity-70">VATHSALA</div>
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-pulse">Processing neural patterns...</div>
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-cyber-pink rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <div className="w-2 h-2 bg-cyber-pink rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <div className="w-2 h-2 bg-cyber-pink rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
               <div ref={messagesEndRef} />
             </div>
           </div>
-          <div className="pb-6">
-            <form onSubmit={handleMessageSubmit} className="flex flex-col md:flex-row gap-4">
-              <label htmlFor="message" className="sr-only">Message:</label>
-              <input
-                type="text"
-                id="message"
-                name="message"
-                value={inputValue}
-                onChange={handleInputChange}
-                placeholder="Enter neural transmission..."
-                className="flex-grow p-4 bg-black/60 border-2 border-cyber-blue/50 rounded-lg text-cyber-light font-mono placeholder-cyber-light/50 focus:outline-none focus:border-cyber-blue focus:shadow-lg focus:shadow-cyber-blue/20 transition-all duration-300"
-              />
-              <div className="flex gap-4">
-                <button
-                  type="submit"
-                  id="sendButton"
-                  disabled={!isSendButtonEnabled || !inputValue.trim() || isAudioMode}
-                  className="px-8 py-4 bg-cyber-blue/20 border-2 border-cyber-blue text-cyber-blue font-cyber font-bold rounded-lg neon-border hover:bg-cyber-blue/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-cyber-blue/20"
-                >
-                  TRANSMIT
-                </button>
-                <button
-                  type="button"
-                  id="startAudioButton"
-                  onClick={handleStartAudioClick}
-                  disabled={isAudioMode}
-                  className="px-8 py-4 bg-cyber-pink/20 border-2 border-cyber-pink text-cyber-pink font-cyber font-bold rounded-lg neon-border-pink hover:bg-cyber-pink/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-cyber-pink/20"
-                >
-                  {isAudioMode ? "VOICE ACTIVE" : "VOICE MODE"}
-                </button>
-              </div>
-            </form>
+          <div className="pb-6 flex justify-center items-center">
+            <button
+              type="button"
+              onClick={handleVoiceToggle}
+              disabled={!isAudioMode && !isSendButtonEnabled && messages.length > 0}
+              className={`px-8 py-4 font-cyber font-bold rounded-lg transition-all duration-300 flex items-center gap-3 text-lg
+                ${isAudioMode 
+                  ? 'bg-red-500/20 border-2 border-red-500 text-red-400 neon-border-red hover:bg-red-500/30' 
+                  : 'bg-cyber-blue/20 border-2 border-cyber-blue text-cyber-blue neon-border hover:bg-cyber-blue/30'
+                }
+                disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              {isAudioMode ? <MicOff /> : <Mic />}
+              {isAudioMode ? 'DISCONNECT' : 'CONNECT VOICE'}
+            </button>
           </div>
         </div>
       </div>
