@@ -1,32 +1,30 @@
-import { Button } from "@/components/ui/button"
+import Link from 'next/link';
 
 export function CTASection() {
   return (
-    <section className="py-20">
-      <div className="container mx-auto px-4">
-        <div className="relative overflow-hidden rounded-2xl bg-aura-dark p-8 md:p-12">
-          <div className="blob blob-blue" style={{ top: "-150px", left: "-100px", opacity: "0.2" }}></div>
-          <div className="blob blob-purple" style={{ bottom: "-150px", right: "-100px", opacity: "0.2" }}></div>
-
-          <div className="relative z-10 max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Ready to Harness the <span className="text-gradient">Force</span>?
-            </h2>
-            <p className="text-xl text-gray-300 mb-8">
-              Join thousands of Jedi and Creeds who have found their perfect match through AuraMatch. May the Force of
-              authentic partnerships be with you.
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Button variant="gradient" size="lg">
-                Begin Your Journey
-              </Button>
-              <Button variant="outline" size="lg">
-                Explore the Temple
-              </Button>
-            </div>
-          </div>
+    <section id="contact" className="py-20 bg-gradient-to-r from-blue-600 to-blue-800">
+      <div className="container mx-auto px-4 text-center">
+        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          Questions or Suggestions?
+        </h2>
+        <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+          We'd love to hear from you. Reach out to us through any of our channels.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <a
+            href="mailto:syde-gsa@uwaterloo.ca"
+            className="px-8 py-4 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-all shadow-lg"
+          >
+            Email Us
+          </a>
+          <Link
+            href="#events"
+            className="px-8 py-4 bg-transparent text-white rounded-lg font-semibold hover:bg-white/10 transition-all border-2 border-white"
+          >
+            View Events
+          </Link>
         </div>
       </div>
     </section>
-  )
+  );
 }

@@ -1,51 +1,55 @@
-import { Zap, Shield, BarChart, Users } from "lucide-react"
-
-const features = [
-  {
-    icon: <Zap className="h-8 w-8 text-aura-blue" />,
-    title: "Living Force Analysis",
-    description: "Our algorithm analyzes an influencer's aura to find brands that align with their true essence.",
-  },
-  {
-    icon: <BarChart className="h-8 w-8 text-aura-purple" />,
-    title: "Engagement Predictions",
-    description: "Simulate how followers will react to potential partnerships before they happen.",
-  },
-  {
-    icon: <Users className="h-8 w-8 text-aura-blue" />,
-    title: "Authentic Connections",
-    description: "Connect Jedi with Creeds that truly resonate with their personal values and audience vibe.",
-  },
-  {
-    icon: <Shield className="h-8 w-8 text-aura-purple" />,
-    title: "Force Protection",
-    description: "Our platform ensures all partnerships maintain balance in the Force, preserving authenticity.",
-  },
-]
+import { Users, Calendar, BookOpen, Heart } from 'lucide-react';
 
 export function FeaturesSection() {
+  const features = [
+    {
+      icon: Users,
+      title: 'Community',
+      description: 'Connect with fellow SYDE grad students and build lasting relationships.',
+    },
+    {
+      icon: Calendar,
+      title: 'Events',
+      description: 'Regular social events, workshops, and networking opportunities throughout the year.',
+    },
+    {
+      icon: BookOpen,
+      title: 'Resources',
+      description: 'Access academic support, career guidance, and professional development resources.',
+    },
+    {
+      icon: Heart,
+      title: 'Wellness',
+      description: 'Mental health support and work-life balance initiatives for graduate students.',
+    },
+  ];
+
   return (
-    <section className="py-20">
+    <section id="events" className="py-20 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            The Power of the <span className="text-gradient">Force</span>
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            What We Do
           </h2>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Our platform goes beyond superficial metrics to create partnerships that flow with the cosmic energy.
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Supporting SYDE graduate students through every step of their academic journey.
           </p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {features.map((feature, index) => (
-            <div key={index} className="aura-card">
-              <div className="mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-gray-400">{feature.description}</p>
-            </div>
-          ))}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {features.map((feature, index) => {
+            const Icon = feature.icon;
+            return (
+              <div key={index} className="p-6 rounded-xl bg-white border border-gray-200 hover:border-blue-400 transition-all hover:shadow-lg">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                  <Icon className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                <p className="text-gray-600">{feature.description}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
-  )
+  );
 }
