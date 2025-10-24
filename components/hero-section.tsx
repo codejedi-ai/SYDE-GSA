@@ -8,14 +8,6 @@ export function HeroSection() {
       <Navigation />
       <div className="container mx-auto px-4 py-20 relative z-10 text-center">
         <div className="mb-8 flex justify-center">
-          <Image
-            src="/SYDEGSALogo.png"
-            alt="SYDE GSA Logo"
-            width={200}
-            height={200}
-            className="rounded-full"
-            priority
-          />
         </div>
         <div className="mb-4">
           <span className="text-lg md:text-xl text-yellow-400 font-semibold tracking-wide">University of Waterloo</span>
