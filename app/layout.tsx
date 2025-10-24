@@ -6,7 +6,11 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'SYDE GSA - Systems Design Engineering Graduate Student Association',
-  description: 'The Systems Design Engineering Graduate Student Association at the University of Waterloo'
+  description: 'The Systems Design Engineering Graduate Student Association at the University of Waterloo',
+  icons: {
+    icon: '/SYDEGSALogo.png',
+    apple: '/SYDEGSALogo.png',
+  }
 }
 
 export default function RootLayout({
