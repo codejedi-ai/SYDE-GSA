@@ -8,6 +8,14 @@ export function HeroSection() {
       <Navigation />
       <div className="container mx-auto px-4 py-20 relative z-10 text-center">
         <div className="mb-8 flex justify-center">
+          <Image
+            src="/SYDEGSALogo.png"
+            alt="SYDE GSA Logo"
+            width={200}
+            height={200}
+            className="rounded-full"
+            priority
+          />
         </div>
         <div className="mb-4">
           <span className="text-lg md:text-xl text-yellow-400 font-semibold tracking-wide">University of Waterloo</span>
@@ -30,7 +38,7 @@ export function HeroSection() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Link
-            href="#events"
+            href="/events"
             className="px-8 py-4 bg-yellow-400 text-black rounded-lg font-semibold hover:bg-yellow-300 transition-all shadow-lg"
           >
             Upcoming Events

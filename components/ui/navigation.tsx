@@ -23,16 +23,16 @@ export function Navigation() {
             <span>SYDE GSA</span>
           </Link>
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="#about" className="text-gray-300 hover:text-yellow-400 transition-colors">
+            <Link href="/#about" className="text-gray-300 hover:text-yellow-400 transition-colors">
               About
             </Link>
-            <Link href="#events" className="text-gray-300 hover:text-yellow-400 transition-colors">
+            <Link href="/events" className="text-gray-300 hover:text-yellow-400 transition-colors">
               Events
             </Link>
-            <Link href="#team" className="text-gray-300 hover:text-yellow-400 transition-colors">
+            <Link href="/#team" className="text-gray-300 hover:text-yellow-400 transition-colors">
               Team
             </Link>
-            <Link href="#contact" className="text-gray-300 hover:text-yellow-400 transition-colors">
+            <Link href="/#contact" className="text-gray-300 hover:text-yellow-400 transition-colors">
               Contact
             </Link>
           </nav>
@@ -46,16 +46,16 @@ export function Navigation() {
       {isOpen && (
         <div className="md:hidden bg-black border-t border-yellow-400/30">
           <nav className="flex flex-col items-center space-y-4 py-4">
-            <Link href="#about" onClick={() => setIsOpen(false)} className="text-gray-300 hover:text-yellow-400 transition-colors">
+            <Link href="/#about" onClick={() => setIsOpen(false)} className="text-gray-300 hover:text-yellow-400 transition-colors">
               About
             </Link>
-            <Link href="#events" onClick={() => setIsOpen(false)} className="text-gray-300 hover:text-yellow-400 transition-colors">
+            <Link href="/events" onClick={() => setIsOpen(false)} className="text-gray-300 hover:text-yellow-400 transition-colors">
               Events
             </Link>
-            <Link href="#team" onClick={() => setIsOpen(false)} className="text-gray-300 hover:text-yellow-400 transition-colors">
+            <Link href="/#team" onClick={() => setIsOpen(false)} className="text-gray-300 hover:text-yellow-400 transition-colors">
               Team
             </Link>
-            <Link href="#contact" onClick={() => setIsOpen(false)} className="text-gray-300 hover:text-yellow-400 transition-colors">
+            <Link href="/#contact" onClick={() => setIsOpen(false)} className="text-gray-300 hover:text-yellow-400 transition-colors">
               Contact
             </Link>
           </nav>
