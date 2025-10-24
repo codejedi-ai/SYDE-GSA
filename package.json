@@ -25,6 +25,7 @@
     "@radix-ui/react-slot": "latest",
     "@radix-ui/react-switch": "latest",
     "@radix-ui/react-tabs": "latest",
+    "@supabase/supabase-js": "^2.76.1",
     "@uiw/codemirror-theme-vscode": "latest",
     "@uiw/codemirror-theme-xcode": "latest",
     "@uiw/react-codemirror": "latest",
