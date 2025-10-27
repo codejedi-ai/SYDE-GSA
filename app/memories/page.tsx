@@ -1,7 +1,7 @@
 import { Navigation } from '@/components/ui/navigation';
 import { Footer } from '@/components/footer';
 import { Calendar, Heart } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import memoriesData from '@/data/memories.json';
 
 interface Memory {
   id: string;
@@ -17,19 +17,6 @@ interface MemoriesByTerm {
   [term: string]: Memory[];
 }
 
-async function getMemories() {
-  const { data: memories, error } = await supabase
-    .from('memories')
-    .select('*')
-    .order('date', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching memories:', error);
-    return [];
-  }
-
-  return memories || [];
-}
 
 function formatDate(dateString: string) {
   const date = new Date(dateString);
@@ -69,8 +56,8 @@ function sortTerms(terms: string[]): string[] {
   });
 }
 
-export default async function MemoriesPage() {
-  const allMemories = await getMemories();
+export default function MemoriesPage() {
+  const allMemories: Memory[] = memoriesData;
   const memoriesByTerm = groupMemoriesByTerm(allMemories);
   const sortedTerms = sortTerms(Object.keys(memoriesByTerm));
 

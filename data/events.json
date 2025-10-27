@@ -1,0 +1,13 @@
+[
+  {
+    "id": "1",
+    "title": "Frisbee Golf",
+    "description": "SYDE GSA's Frisbee golf event went well!! A fun event to make up for bad weather from last term. We enjoyed the end of summer weather with a high of 27 degrees.",
+    "event_date": "2025-09-18",
+    "event_time": "3:00 PM",
+    "location": "Brubacher House",
+    "attendees_expected": "Students and friends",
+    "is_featured": false,
+    "is_past": true
+  }
+]

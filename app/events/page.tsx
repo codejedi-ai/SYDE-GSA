@@ -1,21 +1,7 @@
 import { Navigation } from '@/components/ui/navigation';
 import { Footer } from '@/components/footer';
 import { Calendar, Clock, MapPin, Users } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-
-async function getEvents() {
-  const { data: events, error } = await supabase
-    .from('events')
-    .select('*')
-    .order('event_date', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching events:', error);
-    return [];
-  }
-
-  return events || [];
-}
+import eventsData from '@/data/events.json';
 
 function formatDate(dateString: string) {
   const date = new Date(dateString);
@@ -26,11 +12,9 @@ function formatDate(dateString: string) {
   });
 }
 
-export default async function EventsPage() {
-  const allEvents = await getEvents();
-
-  const upcomingEvents = allEvents.filter(event => !event.is_past);
-  const pastEvents = allEvents.filter(event => event.is_past);
+export default function EventsPage() {
+  const upcomingEvents = eventsData.filter(event => !event.is_past);
+  const pastEvents = eventsData.filter(event => event.is_past);
 
   return (
     <div className="min-h-screen bg-white">
