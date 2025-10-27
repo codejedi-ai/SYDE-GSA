@@ -7,9 +7,9 @@ export function Footer() {
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-3 gap-8 mb-8">
           <div>
-            <h3 className="text-yellow-400 font-semibold text-lg mb-4">SYDE GSA</h3>
+            <h3 className="text-yellow-400 font-semibold text-lg mb-4">InSYDErs</h3>
             <p className="text-sm">
-              The Systems Design Engineering Graduate Student Association at the University of Waterloo.
+              The Systems Design Engineering Graduate Student Association (InSYDErs) at the University of Waterloo.
             </p>
             <p className="text-xs text-gray-400 mt-2 italic">
               Systems is how we know the world. Design is how we change it.
@@ -19,7 +19,7 @@ export function Footer() {
             <h4 className="text-yellow-400 font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2 text-sm">
               <li><Link href="#about" className="hover:text-yellow-400 transition-colors">About Us</Link></li>
-              <li><Link href="#events" className="hover:text-yellow-400 transition-colors">Events</Link></li>
+              <li><Link href="/events" className="hover:text-yellow-400 transition-colors">Events</Link></li>
               <li><Link href="#team" className="hover:text-yellow-400 transition-colors">Our Team</Link></li>
               <li><Link href="#contact" className="hover:text-yellow-400 transition-colors">Contact</Link></li>
             </ul>
@@ -43,7 +43,7 @@ export function Footer() {
           </div>
         </div>
         <div className="border-t border-yellow-400/30 pt-8 text-sm text-center">
-          <p>&copy; 2025 SYDE Graduate Student Association. University of Waterloo.</p>
+          <p>&copy; 2025 InSYDErs - SYDE Graduate Student Association. University of Waterloo.</p>
         </div>
       </div>
     </footer>

@@ -21,9 +21,9 @@ export function HeroSection() {
           <span className="text-lg md:text-xl text-yellow-400 font-semibold tracking-wide">University of Waterloo</span>
         </div>
         <h1 className="text-5xl md:text-7xl font-bold text-white mb-8 leading-tight">
-          SYDE Graduate Student
+          <span className="text-yellow-400">InSYDErs</span>
           <br />
-          <span className="text-yellow-400">Association</span>
+          <span className="text-gray-300 text-3xl md:text-4xl">SYDE Graduate Student Association</span>
         </h1>
         <div className="mb-8 max-w-3xl mx-auto">
           <p className="text-2xl md:text-3xl text-yellow-400 font-semibold italic mb-2">
@@ -34,7 +34,7 @@ export function HeroSection() {
           </p>
         </div>
         <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-          Supporting Systems Design Engineering graduate students through community, events, and resources
+          Supporting InSYDErs through community, events, and resources
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Link

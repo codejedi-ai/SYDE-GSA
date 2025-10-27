@@ -40,10 +40,10 @@ export default async function EventsPage() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-6xl font-bold text-black mb-4">
-              SYDE GSA <span className="text-yellow-400">Events</span>
+              <span className="text-yellow-400">InSYDErs</span> Events
             </h1>
             <p className="text-xl text-gray-700 max-w-2xl mx-auto">
-              Connect, learn, and grow with your fellow Systems Design Engineering graduate students
+              Connect, learn, and grow with fellow InSYDErs
             </p>
           </div>
 
@@ -198,7 +198,7 @@ export default async function EventsPage() {
           <section className="bg-gradient-to-br from-black via-gray-900 to-black rounded-xl p-8 md:p-12 text-center">
             <h2 className="text-3xl font-bold text-white mb-4">Want to Host an Event?</h2>
             <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
-              Have an idea for a SYDE GSA event? We'd love to hear from you! Reach out to us with your suggestions.
+              Have an idea for an InSYDErs event? We'd love to hear from you! Reach out to us with your suggestions.
             </p>
             <a
               href="mailto:syde-gsa@uwaterloo.ca?subject=Event Proposal"

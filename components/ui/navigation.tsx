@@ -15,12 +15,12 @@ export function Navigation() {
           <Link href="/" className="flex items-center gap-3 text-2xl font-bold text-yellow-400">
             <Image
               src="/SYDEGSALogo.png"
-              alt="SYDE GSA Logo"
+              alt="InSYDErs Logo"
               width={40}
               height={40}
               className="rounded-full"
             />
-            <span>SYDE GSA</span>
+            <span>InSYDErs</span>
           </Link>
           <nav className="hidden md:flex items-center space-x-8">
             <Link href="/#about" className="text-gray-300 hover:text-yellow-400 transition-colors">
