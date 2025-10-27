@@ -7,34 +7,20 @@ export function HeroSection() {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black">
       <Navigation />
       <div className="container mx-auto px-4 py-20 relative z-10 text-center">
-        <div className="mb-8 flex justify-center">
-          <Image
-            src="/SYDEGSALogo.png"
-            alt="SYDE GSA Logo"
-            width={200}
-            height={200}
-            priority
-          />
-        </div>
-        <div className="mb-4">
+        <div className="mb-6">
           <span className="text-lg md:text-xl text-yellow-400 font-semibold tracking-wide">University of Waterloo</span>
         </div>
-        <h1 className="text-5xl md:text-7xl font-bold text-white mb-8 leading-tight">
+        <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold text-white mb-12 leading-tight tracking-tight">
           <span className="text-yellow-400">InSYDErs</span>
-          <br />
-          <span className="text-gray-300 text-3xl md:text-4xl">SYDE Graduate Student Association</span>
         </h1>
-        <div className="mb-8 max-w-3xl mx-auto">
-          <p className="text-2xl md:text-3xl text-yellow-400 font-semibold italic mb-2">
+        <div className="mb-12 max-w-4xl mx-auto space-y-4">
+          <p className="text-3xl md:text-4xl lg:text-5xl text-white font-light italic leading-relaxed">
             Systems is how we know the world.
           </p>
-          <p className="text-2xl md:text-3xl text-yellow-400 font-semibold italic">
+          <p className="text-3xl md:text-4xl lg:text-5xl text-white font-light italic leading-relaxed">
             Design is how we change it.
           </p>
         </div>
-        <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-          Supporting InSYDErs through community, events, and resources
-        </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Link
             href="/events"
