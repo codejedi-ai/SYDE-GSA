@@ -18,7 +18,6 @@ export function Navigation() {
               alt="InSYDErs Logo"
               width={40}
               height={40}
-              className="rounded-full"
             />
             <span>InSYDErs</span>
           </Link>

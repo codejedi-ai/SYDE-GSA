@@ -13,7 +13,6 @@ export function HeroSection() {
             alt="SYDE GSA Logo"
             width={200}
             height={200}
-            className="rounded-full"
             priority
           />
         </div>
