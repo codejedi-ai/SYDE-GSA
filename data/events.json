@@ -9,5 +9,16 @@
     "attendees_expected": "Students and friends",
     "is_featured": false,
     "is_past": true
+  },
+  {
+    "id": "2",
+    "title": "Pumpkin Carving",
+    "description": "Join us for a festive pumpkin carving event! Get into the Halloween spirit with fellow InSYDErs. We'll provide the pumpkins and carving tools - just bring your creativity and enthusiasm!",
+    "event_date": "2025-10-31",
+    "event_time": "5:00 PM",
+    "location": "To Be Announced",
+    "attendees_expected": "All InSYDErs welcome",
+    "is_featured": true,
+    "is_past": false
   }
 ]
