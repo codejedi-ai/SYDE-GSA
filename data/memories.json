@@ -7,5 +7,14 @@
     "date": "2025-09-18",
     "image_url": null,
     "created_at": "2025-10-27T00:00:00.000Z"
+  },
+  {
+    "id": "2",
+    "title": "General Trivia Night",
+    "description": "We hosted an amazing general trivia event with InSYDErs and new BME students! The event featured prizes, free food, and SYDE GSA stickers. Everyone enjoyed coffee and donuts while testing their trivia knowledge. The competition was fierce and the winning team celebrated with candy prizes. Great turnout and fantastic energy!",
+    "term": "Fall 2025",
+    "date": "2025-10-09",
+    "image_url": null,
+    "created_at": "2025-10-27T00:00:00.000Z"
   }
 ]

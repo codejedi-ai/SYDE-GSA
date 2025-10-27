@@ -12,6 +12,17 @@
   },
   {
     "id": "2",
+    "title": "General Trivia Night",
+    "description": "InSYDErs hosted a general trivia event with prizes, free food and SYDE GSA stickers! InSYDErs and new BME students enjoyed coffee and donuts while competing for candy prizes. The winning team took home the candy!",
+    "event_date": "2025-10-09",
+    "event_time": "4:30 PM - 6:30 PM",
+    "location": "E5-6006",
+    "attendees_expected": "InSYDErs and BME students",
+    "is_featured": false,
+    "is_past": true
+  },
+  {
+    "id": "3",
     "title": "Pumpkin Carving",
     "description": "Join us for a festive pumpkin carving event! Get into the Halloween spirit with fellow InSYDErs. We'll provide the pumpkins and carving tools - just bring your creativity and enthusiasm!",
     "event_date": "2025-10-31",
