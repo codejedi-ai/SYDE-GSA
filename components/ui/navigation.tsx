@@ -28,6 +28,9 @@ export function Navigation() {
             <Link href="/events" className="text-gray-300 hover:text-yellow-400 transition-colors">
               Events
             </Link>
+            <Link href="/memories" className="text-gray-300 hover:text-yellow-400 transition-colors">
+              Memories
+            </Link>
             <Link href="/#team" className="text-gray-300 hover:text-yellow-400 transition-colors">
               Team
             </Link>
@@ -50,6 +53,9 @@ export function Navigation() {
             </Link>
             <Link href="/events" onClick={() => setIsOpen(false)} className="text-gray-300 hover:text-yellow-400 transition-colors">
               Events
+            </Link>
+            <Link href="/memories" onClick={() => setIsOpen(false)} className="text-gray-300 hover:text-yellow-400 transition-colors">
+              Memories
             </Link>
             <Link href="/#team" onClick={() => setIsOpen(false)} className="text-gray-300 hover:text-yellow-400 transition-colors">
               Team
