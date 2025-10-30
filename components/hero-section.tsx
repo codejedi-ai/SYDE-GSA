@@ -15,10 +15,10 @@ export function HeroSection() {
         </h1>
         <div className="mb-12 max-w-4xl mx-auto space-y-4">
           <p className="text-3xl md:text-4xl lg:text-5xl text-white font-light italic leading-relaxed">
-            Systems is how we know the world.
+            <span className="text-yellow-400">SY</span>stems is how we know the world.
           </p>
           <p className="text-3xl md:text-4xl lg:text-5xl text-white font-light italic leading-relaxed">
-            Design is how we change it.
+            <span className="text-yellow-400">DE</span>sign is how we change it.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">

@@ -12,7 +12,7 @@ export function Footer() {
               The Systems Design Engineering Graduate Student Association (InSYDErs) at the University of Waterloo.
             </p>
             <p className="text-xs text-gray-400 mt-2 italic">
-              Systems is how we know the world. Design is how we change it.
+              <span className="text-yellow-400">SY</span>stems is how we know the world. <span className="text-yellow-400">DE</span>sign is how we change it.
             </p>
           </div>
           <div>
